@@ -52,6 +52,8 @@ In ID stage, the instruction is first decoded in decoder, then the register file
 
 Decode the instruction to different control signals, and generate the immediate value.
 
+We only detect illegal instruction detection on opcode. If other part of the instruction (such as funct3) is illegal, we don't detect that and the instruction might be treated as NOP depending on the encoding
+
 ### register file (regfile.sv)
 
 Hold the 32 register defined in RISC-V spec. Contains 2 read port for rs1/rs2 access in ID stage and 1 write port for register value write back from WB stage.
@@ -70,16 +72,18 @@ ALU contains the logic for executing most of the arithmetic/logic operation in R
 
 These are all the operations it does under RV32I Instruction Set (Floating point / Multiplication / Divide are implemented in separate logic unit if supported)
 
-| Operation | Instruction                                       |
-| --------- | ------------------------------------------------- |
-| ADD       | AUIPC/LOAD/STORE/ADDI/ADD                         |
-| SUB       | SUB/BEQ/BNE/BLT/BGE/BLTU/BGEU/SLT/SLTU/SLTI/SLTIU |
-| XOR       | XOR/XORI                                          |
-| AND       | AND/ANDI                                          |
-| OR        | OR/ORI                                            |
-| SLL       | SLL/SLLI                                          |
-| SRL       | SRL/SRLI                                          |
-| SRA       | SRA/SRAI                                          |
+| Operation | Instruction                                                  |
+| --------- | ------------------------------------------------------------ |
+| ADD       | AUIPC/LOAD/STORE<sup>1</sup>/ADDI/ADD                        |
+| SUB       | SUB/BEQ/BNE/BLT/BGE/BLTU/BGEU<sup>2</sup>/SLT/SLTU/SLTI/SLTIU |
+| XOR       | XOR/XORI                                                     |
+| AND       | AND/ANDI                                                     |
+| OR        | OR/ORI                                                       |
+| SLL       | SLL/SLLI                                                     |
+| SRL       | SRL/SRLI                                                     |
+| SRA       | SRA/SRAI                                                     |
+
+In the basic/default cpu version, we reuse ALU to calculate load/store address (1) and branch result (2) to save logic resources
 
 ### ALU Operand Source
 
