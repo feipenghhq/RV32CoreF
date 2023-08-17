@@ -24,12 +24,13 @@ module decoder (
     output logic [`ALU_OP_WIDTH-1:0]    alu_opcode,     // alu opcode
     output logic                        alu_src1_sel,   // alu src1 select
     output logic                        alu_src2_sel,   // alu src2 select
-    output logic                        bxx,            // branch instructions (beq/blt/bltu)
-    output logic                        bnxx,           // branch instructions (bne/bge/bgeu)
+    output logic                        branch,         // branch instruction
+    output logic [`BRANCH_OP_WIDTH-1:0] branch_opcode,  // branch opcode
     output logic                        jump,           // jump instructions
     output logic                        mem_read,       // memory read
     output logic                        mem_write,      // memory write
     output logic [`MEM_OP_WIDTH-1:0]    mem_opcode,     // memory operation
+    output logic                        unsign,         // unsigned branch instruction or unsigned mem instruction
     output logic                        rd_write,       // rd write
     output logic [`REG_AW-1:0]          rd_addr,        // rd address
     output logic                        rs1_read,       // rs1 read
@@ -93,6 +94,7 @@ module decoder (
     logic is_bge;
     logic is_bltu;
     logic is_bgeu;
+    logic branch_is_unsigned;
 
     // -------------------------------------------
     // Extract Each field from Instruction
@@ -154,6 +156,7 @@ module decoder (
     assign is_bge  = is_branch & (rv32i_funct3 == `RV32I_FUNC3_BGE);
     assign is_bltu = is_branch & (rv32i_funct3 == `RV32I_FUNC3_BLTU);
     assign is_bgeu = is_branch & (rv32i_funct3 == `RV32I_FUNC3_BGEU);
+    assign branch_is_unsigned = rv32i_funct3[1];
 
     // -------------------------------------------
     // Control signal generation
@@ -179,7 +182,6 @@ module decoder (
     assign mem_opcode[`MEM_OP_BYTE] = ls_is_byte;
     assign mem_opcode[`MEM_OP_HALF] = ls_is_half;
     assign mem_opcode[`MEM_OP_WORD] = ls_is_word;
-    assign mem_opcode[`MEM_OP_UNSIGN] = ls_is_unsigned;
 
     assign jump = is_jal | is_jalr;
     assign rd_write = is_lui | is_auipc | jump | is_itype | is_rtype | is_load;
@@ -187,8 +189,13 @@ module decoder (
     assign rs2_read = is_rtype | is_store;
     assign mem_read = is_load;
     assign mem_write = is_store;
-    assign bxx = is_branch & ~rv32i_funct3[0];
-    assign bnxx = is_branch & rv32i_funct3[0];
+
+    assign branch = is_branch;
+    assign branch_opcode[`BRANCH_OP_EQ] = ~rv32i_funct3[2];
+    assign branch_opcode[`BRANCH_OP_LT] = rv32i_funct3[2];
+    assign branch_opcode[`BRANCH_OP_NEGATE] = rv32i_funct3[0];
+
+    assign unsign = ls_is_unsigned | branch_is_unsigned;
 
     assign is_i_type_imm = is_jalr | is_itype | is_load;
     assign is_u_type_imm = is_lui | is_auipc;

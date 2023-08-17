@@ -27,5 +27,10 @@
 `define MEM_OP_BYTE     0
 `define MEM_OP_HALF     1
 `define MEM_OP_WORD     2
-`define MEM_OP_UNSIGN   3
-`define MEM_OP_WIDTH    4
+`define MEM_OP_WIDTH    3
+
+// Branch Opcode
+`define BRANCH_OP_EQ    0
+`define BRANCH_OP_LT    1
+`define BRANCH_OP_NEGATE 2
+`define BRANCH_OP_WIDTH 3

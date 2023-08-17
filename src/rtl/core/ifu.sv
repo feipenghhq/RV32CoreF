@@ -20,14 +20,14 @@ module ifu (
     input  logic                clk,
     input  logic                rst_b,
     // Instruction RAM Access
-    output logic                ram_req,
-    output logic                ram_write,      // 1: write, 0: read
-    output logic [`XLEN/8-1:0]  ram_wstrb,      // write strobe (write byte enable)
-    output logic [`XLEN-1:0]    ram_addr,       // address
-    output logic [`XLEN-1:0]    ram_wdata,
-    output logic                ram_addr_ok,
-    input  logic                ram_data_ok,
-    input  logic [`XLEN-1:0]    ram_rdata,
+    output logic                iram_req,
+    output logic                iram_write,      // 1: write, 0: read
+    output logic [`XLEN/8-1:0]  iram_wstrb,      // write strobe (write byte enable)
+    output logic [`XLEN-1:0]    iram_addr,       // address
+    output logic [`XLEN-1:0]    iram_wdata,
+    output logic                iram_addr_ok,
+    input  logic                iram_data_ok,
+    input  logic [`XLEN-1:0]    iram_rdata,
     // Instruction and PC
     output logic [`XLEN-1:0]    pc_val,
     output logic [`XLEN-1:0]    instruction,
@@ -44,11 +44,11 @@ module ifu (
     // 2. Assume that the ram is synchronouse ram and data come back at the next clock cycle
     // 3. We introduce a "Pre IF" stage where we update the PC. We send the read request on
     // the "Pre IF" stage and the address is next_pc so when data comes back it is in IF stage
-    assign ram_req = 1'b1;
-    assign ram_write = 1'b0;
-    assign ram_wstrb = '0;
-    assign ram_addr = next_pc;
-    assign ram_wdata = '0;
+    assign iram_req = 1'b1;
+    assign iram_write = 1'b0;
+    assign iram_wstrb = '0;
+    assign iram_addr = next_pc;
+    assign iram_wdata = '0;
 
     // -------------------------------------------
     // PC logic
@@ -70,7 +70,7 @@ module ifu (
     // Instruction logic
     // -------------------------------------------
 
-    assign instruction = ram_rdata;
-    assign instr_valid = ram_data_ok;
+    assign instruction = iram_rdata;
+    assign instr_valid = iram_data_ok;
 
 endmodule
