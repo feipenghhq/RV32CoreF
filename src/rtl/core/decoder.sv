@@ -22,8 +22,8 @@ module decoder (
     input logic [`XLEN-1:0]             instruction,
     // contrl signal to downstrem pipeline stage
     output logic [`ALU_OP_WIDTH-1:0]    alu_opcode,     // alu opcode
-    output logic                        alu_src1_sel,   // alu src1 select
-    output logic                        alu_src2_sel,   // alu src2 select
+    output logic                        alu_src1_sel_pc,   // alu src1 select
+    output logic                        alu_src2_sel_imm,   // alu src2 select
     output logic                        branch,         // branch instruction
     output logic [`BRANCH_OP_WIDTH-1:0] branch_opcode,  // branch opcode
     output logic                        jump,           // jump instructions
@@ -158,15 +158,19 @@ module decoder (
     assign is_bgeu = is_branch & (rv32i_funct3 == `RV32I_FUNC3_BGEU);
     assign branch_is_unsigned = rv32i_funct3[1];
 
+    // Illegal Instruction
+    //assign illegal_instr = ~(is_lui   | is_auipc | is_jal  | is_jalr  |
+    //                         is_itype | is_rtype | is_load | is_store | is_branch);
+
     // -------------------------------------------
     // Control signal generation
     // -------------------------------------------
 
     // select pc
-    assign alu_src1_sel = is_jal | is_auipc;
+    assign alu_src1_sel_pc = is_jal | is_auipc | is_branch;
 
     // select immediate value
-    assign alu_src2_sel = jump | is_lui | is_auipc | is_itype;
+    assign alu_src2_sel_imm = jump | is_branch | is_lui | is_auipc | is_itype;
 
     assign alu_opcode[`ALU_OP_ADD] = is_add;
     assign alu_opcode[`ALU_OP_SUB] = is_sub | is_beq | is_bne;
@@ -191,9 +195,9 @@ module decoder (
     assign mem_write = is_store;
 
     assign branch = is_branch;
-    assign branch_opcode[`BRANCH_OP_EQ] = ~rv32i_funct3[2];
-    assign branch_opcode[`BRANCH_OP_LT] = rv32i_funct3[2];
-    assign branch_opcode[`BRANCH_OP_NEGATE] = rv32i_funct3[0];
+    assign branch_opcode[`BRANCH_OP_EQ] = ~rv32i_funct3[2];     // OP_EQ encode both beq and bne
+    assign branch_opcode[`BRANCH_OP_LT] = rv32i_funct3[2];      // OP_LT encode both blt(u) and bge(u)
+    assign branch_opcode[`BRANCH_OP_NEGATE] = rv32i_funct3[0];  // OP_NEGATE distinguish beq/bne and blt(u)/bge(u)
 
     assign unsign = ls_is_unsigned | branch_is_unsigned;
 

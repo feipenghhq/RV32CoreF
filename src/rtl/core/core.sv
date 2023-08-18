@@ -43,8 +43,8 @@ module core (
     logic [`XLEN-1:0]               ex_pc;
     logic [`XLEN-1:0]               ex_instruction;
     logic [`ALU_OP_WIDTH-1:0]       ex_alu_opcode;
-    logic                           ex_alu_src1_sel;
-    logic                           ex_alu_src2_sel;
+    logic                           ex_alu_src1_sel_pc;
+    logic                           ex_alu_src2_sel_imm;
     logic                           ex_branch;
     logic [`BRANCH_OP_WIDTH-1:0]    ex_branch_opcode;
     logic                           ex_jump;

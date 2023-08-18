@@ -18,8 +18,7 @@ module alu (
     input  logic [`XLEN-1:0]    alu_src1,
     input  logic [`XLEN-1:0]    alu_src2,
     output logic [`XLEN-1:0]    alu_result,
-    output logic [`XLEN-1:0]    alu_add_result, // dedicated result for addition operation
-    output logic                alu_lt_result   // dedicated result for slt/sltu operation
+    output logic [`XLEN-1:0]    alu_adder_result   // dedicated result from adder operation
 );
 
     // --------------------------------------
@@ -43,7 +42,6 @@ module alu (
     logic alu_adder_cout;
     logic [`XLEN-1:0] alu_adder_src2;
 
-    logic [`XLEN-1:0] alu_adder_result;
     logic [`XLEN-1:0] alu_slt_result;
     logic [`XLEN-1:0] alu_sltu_result;
     logic [`XLEN-1:0] alu_xor_result;
@@ -100,16 +98,13 @@ module alu (
 
     assign alu_op_add_or_sub = alu_op_add | alu_op_sub;
     assign alu_result = ({`XLEN{alu_op_add_or_sub}} & alu_adder_result) |
-                        ({`XLEN{alu_op_sll}} & alu_sll_result)   |
-                        ({`XLEN{alu_op_slt}} & alu_slt_result)   |
-                        ({`XLEN{alu_op_sltu}} & alu_sltu_result) |
-                        ({`XLEN{alu_op_xor}} & alu_xor_result)   |
-                        ({`XLEN{alu_op_srl}} & alu_srl_result)   |
-                        ({`XLEN{alu_op_sra}} & alu_sra_result)   |
-                        ({`XLEN{alu_op_or}} & alu_or_result)     |
-                        ({`XLEN{alu_op_and}} & alu_and_result);
-
-    assign alu_add_result = alu_adder_result;
-    assign alu_lt_result = (alu_slt_result[0] & alu_op_slt) | (alu_sltu_result[0] & alu_op_sltu);
+                        ({`XLEN{alu_op_sll}}        & alu_sll_result)   |
+                        ({`XLEN{alu_op_slt}}        & alu_slt_result)   |
+                        ({`XLEN{alu_op_sltu}}       & alu_sltu_result)  |
+                        ({`XLEN{alu_op_xor}}        & alu_xor_result)   |
+                        ({`XLEN{alu_op_srl}}        & alu_srl_result)   |
+                        ({`XLEN{alu_op_sra}}        & alu_sra_result)   |
+                        ({`XLEN{alu_op_or}}         & alu_or_result)    |
+                        ({`XLEN{alu_op_and}}        & alu_and_result);
 
 endmodule

@@ -27,8 +27,8 @@ module ID (
     output logic [`XLEN-1:0]            ex_pc,
     output logic [`XLEN-1:0]            ex_instruction,
     output logic [`ALU_OP_WIDTH-1:0]    ex_alu_opcode,
-    output logic                        ex_alu_src1_sel,
-    output logic                        ex_alu_src2_sel,
+    output logic                        ex_alu_src1_sel_pc,
+    output logic                        ex_alu_src2_sel_imm,
     output logic                        ex_branch,
     output logic [`BRANCH_OP_WIDTH-1:0] ex_branch_opcode,
     output logic                        ex_jump,
@@ -65,8 +65,8 @@ module ID (
 
     // From/to decoder
     logic [`ALU_OP_WIDTH-1:0]       alu_opcode;
-    logic                           alu_src1_sel;
-    logic                           alu_src2_sel;
+    logic                           alu_src1_sel_pc;
+    logic                           alu_src2_sel_imm;
     logic                           branch;
     logic [`BRANCH_OP_WIDTH-1:0]    branch_opcode;
     logic                           jump;
@@ -97,8 +97,8 @@ module ID (
         ex_pc <= id_pc;
         ex_instruction <= id_instruction;
         ex_alu_opcode <= alu_opcode;
-        ex_alu_src1_sel <= alu_src1_sel;
-        ex_alu_src2_sel <= alu_src2_sel;
+        ex_alu_src1_sel_pc <= alu_src1_sel_pc;
+        ex_alu_src2_sel_imm <= alu_src2_sel_imm;
         ex_branch <= branch;
         ex_branch_opcode <= branch_opcode;
         ex_jump <= jump;
