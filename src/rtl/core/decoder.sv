@@ -21,29 +21,29 @@
 module decoder (
     input logic [`XLEN-1:0]             instruction,
     // contrl signal to downstrem pipeline stage
-    output logic [`ALU_OP_WIDTH-1:0]    alu_opcode,     // alu opcode
-    output logic                        alu_src1_sel_pc,   // alu src1 select
-    output logic                        alu_src2_sel_imm,   // alu src2 select
-    output logic                        branch,         // branch instruction
-    output logic [`BRANCH_OP_WIDTH-1:0] branch_opcode,  // branch opcode
-    output logic                        jump,           // jump instructions
-    output logic                        mem_read,       // memory read
-    output logic                        mem_write,      // memory write
-    output logic [`MEM_OP_WIDTH-1:0]    mem_opcode,     // memory operation
-    output logic                        unsign,         // unsigned branch instruction or unsigned mem instruction
-    output logic                        rd_write,       // rd write
-    output logic [`REG_AW-1:0]          rd_addr,        // rd address
-    output logic                        rs1_read,       // rs1 read
-    output logic [`REG_AW-1:0]          rs1_addr,       // rs1 address
-    output logic                        rs2_read,       // rs2 read
-    output logic [`REG_AW-1:0]          rs2_addr,       // rs2 address
-    output logic [`XLEN-1:0]            immediate       // immediate value
+    output logic [`ALU_OP_WIDTH-1:0]    dec_alu_opcode,     // alu opcode
+    output logic                        dec_alu_src1_sel_pc,    // alu src1 select
+    output logic                        dec_alu_src2_sel_imm,   // alu src2 select
+    output logic                        dec_branch,         // branch instruction
+    output logic [`BRANCH_OP_WIDTH-1:0] dec_branch_opcode,  // branch opcode
+    output logic                        dec_jump,           // jump instructions
+    output logic                        dec_mem_read,       // memory read
+    output logic                        dec_mem_write,      // memory write
+    output logic [`MEM_OP_WIDTH-1:0]    dec_mem_opcode,     // memory operation
+    output logic                        dec_unsign,         // unsigned branch instruction or unsigned mem instruction
+    output logic                        dec_rd_write,       // rd write
+    output logic [`REG_AW-1:0]          dec_rd_addr,        // rd address
+    output logic                        dec_rs1_read,       // rs1 read
+    output logic [`REG_AW-1:0]          dec_rs1_addr,       // rs1 address
+    output logic                        dec_rs2_read,       // rs2 read
+    output logic [`REG_AW-1:0]          dec_rs2_addr,       // rs2 address
+    output logic [`XLEN-1:0]            dec_immediate       // immediate value
 );
 
     logic [1:0] rv32i_phase;
     logic [4:0] rv32i_opcode;
     logic [2:0] rv32i_funct3;
-    logic [6:0] rv32i_funct7;
+    //logic [6:0] rv32i_funct7;
 
     logic [`XLEN-1:0] u_type_imm_val;
     logic [`XLEN-1:0] i_type_imm_val;
@@ -99,14 +99,10 @@ module decoder (
     // -------------------------------------------
     // Extract Each field from Instruction
     // -------------------------------------------
-    assign rs1_addr = instruction[19:15];
-    assign rs2_addr = instruction[24:20];
-    assign rd_addr  = instruction[24:20];
-
     assign rv32i_phase  = instruction[1:0];
     assign rv32i_opcode = instruction[6:2];
     assign rv32i_funct3 = instruction[14:12];
-    assign rv32i_funct7 = instruction[31:25];
+    //assign rv32i_funct7 = instruction[31:25];
 
     assign u_type_imm_val = {instruction[31:12], 12'b0};
     assign i_type_imm_val = {{20{instruction[31]}}, instruction[31:20]};
@@ -165,50 +161,54 @@ module decoder (
     // -------------------------------------------
     // Control signal generation
     // -------------------------------------------
+    // register address
+    assign dec_rs1_addr = instruction[19:15];
+    assign dec_rs2_addr = instruction[24:20];
+    assign dec_rd_addr  = instruction[24:20];
 
     // select pc
-    assign alu_src1_sel_pc = is_jal | is_auipc | is_branch;
+    assign dec_alu_src1_sel_pc = is_jal | is_auipc | is_branch;
 
     // select immediate value
-    assign alu_src2_sel_imm = jump | is_branch | is_lui | is_auipc | is_itype;
+    assign dec_alu_src2_sel_imm = dec_jump | is_branch | is_lui | is_auipc | is_itype;
 
-    assign alu_opcode[`ALU_OP_ADD] = is_add;
-    assign alu_opcode[`ALU_OP_SUB] = is_sub | is_beq | is_bne;
-    assign alu_opcode[`ALU_OP_SLL] = is_sll;
-    assign alu_opcode[`ALU_OP_SLT] = is_slt | is_blt | is_bge;
-    assign alu_opcode[`ALU_OP_SLTU] = is_sltu | is_bltu | is_bgeu;
-    assign alu_opcode[`ALU_OP_XOR] = is_xor;
-    assign alu_opcode[`ALU_OP_SRL] = is_srl;
-    assign alu_opcode[`ALU_OP_SRA] = is_sra;
-    assign alu_opcode[`ALU_OP_OR]  = is_or;
-    assign alu_opcode[`ALU_OP_AND] = is_and;
+    assign dec_alu_opcode[`ALU_OP_ADD] = is_add;
+    assign dec_alu_opcode[`ALU_OP_SUB] = is_sub | is_beq | is_bne;
+    assign dec_alu_opcode[`ALU_OP_SLL] = is_sll;
+    assign dec_alu_opcode[`ALU_OP_SLT] = is_slt | is_blt | is_bge;
+    assign dec_alu_opcode[`ALU_OP_SLTU] = is_sltu | is_bltu | is_bgeu;
+    assign dec_alu_opcode[`ALU_OP_XOR] = is_xor;
+    assign dec_alu_opcode[`ALU_OP_SRL] = is_srl;
+    assign dec_alu_opcode[`ALU_OP_SRA] = is_sra;
+    assign dec_alu_opcode[`ALU_OP_OR]  = is_or;
+    assign dec_alu_opcode[`ALU_OP_AND] = is_and;
 
-    assign mem_opcode[`MEM_OP_BYTE] = ls_is_byte;
-    assign mem_opcode[`MEM_OP_HALF] = ls_is_half;
-    assign mem_opcode[`MEM_OP_WORD] = ls_is_word;
+    assign dec_mem_opcode[`MEM_OP_BYTE] = ls_is_byte;
+    assign dec_mem_opcode[`MEM_OP_HALF] = ls_is_half;
+    assign dec_mem_opcode[`MEM_OP_WORD] = ls_is_word;
 
-    assign jump = is_jal | is_jalr;
-    assign rd_write = is_lui | is_auipc | jump | is_itype | is_rtype | is_load;
-    assign rs1_read = is_rtype | is_itype | is_jalr | is_load;
-    assign rs2_read = is_rtype | is_store;
-    assign mem_read = is_load;
-    assign mem_write = is_store;
+    assign dec_jump = is_jal | is_jalr;
+    assign dec_rd_write = is_lui | is_auipc | dec_jump | is_itype | is_rtype | is_load;
+    assign dec_rs1_read = is_rtype | is_itype | is_jalr | is_load;
+    assign dec_rs2_read = is_rtype | is_store;
+    assign dec_mem_read = is_load;
+    assign dec_mem_write = is_store;
 
-    assign branch = is_branch;
-    assign branch_opcode[`BRANCH_OP_EQ] = ~rv32i_funct3[2];     // OP_EQ encode both beq and bne
-    assign branch_opcode[`BRANCH_OP_LT] = rv32i_funct3[2];      // OP_LT encode both blt(u) and bge(u)
-    assign branch_opcode[`BRANCH_OP_NEGATE] = rv32i_funct3[0];  // OP_NEGATE distinguish beq/bne and blt(u)/bge(u)
+    assign dec_branch = is_branch;
+    assign dec_branch_opcode[`BRANCH_OP_EQ] = ~rv32i_funct3[2];     // OP_EQ encode both beq and bne
+    assign dec_branch_opcode[`BRANCH_OP_LT] = rv32i_funct3[2];      // OP_LT encode both blt(u) and bge(u)
+    assign dec_branch_opcode[`BRANCH_OP_NEGATE] = rv32i_funct3[0];  // OP_NEGATE distinguish beq/bne and blt(u)/bge(u)
 
-    assign unsign = ls_is_unsigned | branch_is_unsigned;
+    assign dec_unsign = ls_is_unsigned | branch_is_unsigned;
 
     assign is_i_type_imm = is_jalr | is_itype | is_load;
     assign is_u_type_imm = is_lui | is_auipc;
     assign is_j_type_imm = is_jal;
     assign is_s_type_imm = is_store;
     assign is_b_type_imm = is_branch;
-    assign immediate = ({32{is_i_type_imm}} & i_type_imm_val) |
-                       ({32{is_u_type_imm}} & u_type_imm_val) |
-                       ({32{is_j_type_imm}} & j_type_imm_val) |
-                       ({32{is_s_type_imm}} & s_type_imm_val) |
-                       ({32{is_b_type_imm}} & b_type_imm_val) ;
+    assign dec_immediate = ({32{is_i_type_imm}} & i_type_imm_val) |
+                           ({32{is_u_type_imm}} & u_type_imm_val) |
+                           ({32{is_j_type_imm}} & j_type_imm_val) |
+                           ({32{is_s_type_imm}} & s_type_imm_val) |
+                           ({32{is_b_type_imm}} & b_type_imm_val) ;
 endmodule

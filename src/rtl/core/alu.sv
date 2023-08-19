@@ -81,7 +81,9 @@ module alu (
     assign alu_substract = alu_op_sub | alu_op_slt | alu_op_sltu;
     assign alu_adder_src2 = alu_substract ? ~alu_src2 : alu_src2;
     assign alu_adder_cin = alu_substract ? 1'b1 : 1'b0;
+    /* verilator lint_off WIDTH */
     assign {alu_adder_cout, alu_adder_result} = alu_src1 + alu_adder_src2 + alu_adder_cin;
+    /* verilator lint_on WIDTH */
 
     // alt result can be calcualted with the following cases
     // 1. src1 < 0 and src2 > 0

@@ -12,9 +12,10 @@
 
 `include "config.svh"
 
-module regfile (
+module regfile #(
+    parameter R0_ZERO = 0
+)(
     input  logic                clk,
-    input  logic                rst_b,
     // RS1 read port
     input  logic [`REG_AW-1:0]  rs1_addr,
     output logic [`XLEN-1:0]    rs1_rdata,
@@ -29,13 +30,17 @@ module regfile (
 
     reg [`XLEN-1:0] register[`REG_NUM];
 
-    // r0 always read out zero
 
-    // RS1
-    assign rs1_rdata = (rs1_addr == 0) ? `XLEN'b0 : register[rs1_addr];
-
-    // RS2
-    assign rs2_rdata = (rs2_addr == 0) ? `XLEN'b0 : register[rs2_addr];
+    generate
+        if (R0_ZERO) begin: gen_r0_zero
+            assign rs1_rdata = (rs1_addr == 0) ? `XLEN'b0 : register[rs1_addr];
+            assign rs2_rdata = (rs2_addr == 0) ? `XLEN'b0 : register[rs2_addr];
+        end
+        else begin: gen_no_r0_zero
+            assign rs1_rdata = register[rs1_addr];
+            assign rs2_rdata = register[rs2_addr];
+        end
+    endgenerate
 
     // RD
     always @(posedge clk) begin

@@ -25,13 +25,16 @@ module ifu (
     output logic [`XLEN/8-1:0]  iram_wstrb,      // write strobe (write byte enable)
     output logic [`XLEN-1:0]    iram_addr,       // address
     output logic [`XLEN-1:0]    iram_wdata,
-    output logic                iram_addr_ok,
+    input  logic                iram_addr_ok,
     input  logic                iram_data_ok,
     input  logic [`XLEN-1:0]    iram_rdata,
     // Instruction and PC
     output logic [`XLEN-1:0]    pc_val,
     output logic [`XLEN-1:0]    instruction,
-    output logic                instr_valid
+    output logic                instr_valid,
+    // Branch Info
+    input  logic                branch,       // jump and taken branch
+    input  logic [`XLEN-1:0]    branch_pc     // target pc
 );
 
     logic [`XLEN-1:0]   pc;
@@ -50,12 +53,14 @@ module ifu (
     assign iram_addr = next_pc;
     assign iram_wdata = '0;
 
+    // FIXME: Need to consider iram_addr_ok
+
     // -------------------------------------------
     // PC logic
     // -------------------------------------------
 
     assign pc_val = pc;
-    assign next_pc = pc + `XLEN'h4;
+    assign next_pc = branch ? branch_pc : pc + `XLEN'h4;
 
     always @(posedge clk) begin
         if (!rst_b) begin

@@ -171,16 +171,16 @@ There are several source of the write data:
 
 ## Pipeline 
 
-
-
 ### Pipeline Control Signal
 
-1. In ordering to simply the pipeline control such as stall and flush, we introduce a handshake control between the adjacent pipeline. Here are the signals to implement the handshake:
+In ordering to simply the pipeline control such as stall and flush, we introduce a handshake control between the adjacent pipeline. Here are the signals to implement the handshake:
 
 - `<stage>_pipe_valid`: The valid indicator for pipeline stage. This is implemented from the register. 
 - `<stage>_pipe_done`: Indicate the current task on pipeline stage is completed and can be moved to the next pipeline stage
 - `<stage>_pipe_ready`: Indicate that the pipeline stage is ready to take the data from previous pipeline.
 - `<stage>_pipe_req`: Indicate that the pipeline request to send data into the next pipeline
+- `<stage>_pipe_flush`: Indicate the the there is a request from previous stage to flush the current stage
+- `<stage>_valid`: Indicate the the current pipeline stage is valid
 
 Status of handshaking signals
 
@@ -191,15 +191,28 @@ Status of handshaking signals
 | 1                   | 0                       | Pipeline Stalled from X+ 1 stage                             |
 | 1                   | 1                       | Successful handshake. Valid data is transferred from stage X to stage X+1 |
 
-2. We also need signal to indicate pipeline flushing. 
+General logic for the control signal
 
-Signal we used to carry the flush request: `<stage>_pipe_flush`:
+(Note: This need to updated once we consider exception)
 
-Usually when we flush the pipeline, we want to flush all the way to the first stage (IF) from the current pipeline stage. 
+```verilog
+// Assuming s1 talks to s2:
 
-Case 1: For a taken branch or jump in EX stage, we want to flush EX, ID, IF stage, 
+// s1_valid: pipeline itself is valid and no flusing request from next stage
+assign s1_valid = s1_pipe_valid & ~s2_pipe_flush;
 
-Case 2: If we carry an exception along the pipeline, we would like to flush all the previous stage. We could flush all the pipeline at once when the exception reach the final processing stage (for precise exception) but we still need to invalidate the execution of some instruction in the pipeline. For example, mem request is sent at EX stage, If we have an exception on MEM stage, then we will need to invalidate the mem request in EX stage, so to simply this, we just chose to flush the pipeline when we see there is an exception carried in the pipeline stage.  In our current design, there is no exception generated beyond the EX stage
+// s1_pipe_done: task in s1 stage has completed
+assign s1_pipe_done = <task in s1 has completed>;
+
+// s1_pipe_ready: task in s1 stage has completed (s1_pipe_done) and next stage is ready
+assign s1_pipe_ready = s2_pipe_ready & s2_pipe_done;
+
+// s1_pipe_req: task in s1 stage has completed (s1_pipe_done) and stage itself is valid (s1_valid)
+assign s1_pipe_req = s1_pipe_done & s1_valid;
+
+// s1_pipe_flush: task in s1 reequest flusing or next stage request flusing
+assign s1_pipe_flush = <task in s1 request flushing> | s2_pipe_flush;
+```
 
 
 
