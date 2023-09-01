@@ -1,0 +1,90 @@
+
+generated/rv32ui-p-auipc:     file format elf32-littleriscv
+
+
+Disassembly of section .text.init:
+
+00000000 <_start>:
+   0:	00000093          	li	ra,0
+   4:	00000113          	li	sp,0
+   8:	00000193          	li	gp,0
+   c:	00000213          	li	tp,0
+  10:	00000293          	li	t0,0
+  14:	00000313          	li	t1,0
+  18:	00000393          	li	t2,0
+  1c:	00000413          	li	s0,0
+  20:	00000493          	li	s1,0
+  24:	00000513          	li	a0,0
+  28:	00000593          	li	a1,0
+  2c:	00000613          	li	a2,0
+  30:	00000693          	li	a3,0
+  34:	00000713          	li	a4,0
+  38:	00000793          	li	a5,0
+  3c:	00000813          	li	a6,0
+  40:	00000893          	li	a7,0
+  44:	00000913          	li	s2,0
+  48:	00000993          	li	s3,0
+  4c:	00000a13          	li	s4,0
+  50:	00000a93          	li	s5,0
+  54:	00000b13          	li	s6,0
+  58:	00000b93          	li	s7,0
+  5c:	00000c13          	li	s8,0
+  60:	00000c93          	li	s9,0
+  64:	00000d13          	li	s10,0
+  68:	00000d93          	li	s11,0
+  6c:	00000e13          	li	t3,0
+  70:	00000e93          	li	t4,0
+  74:	00000f13          	li	t5,0
+  78:	00000f93          	li	t6,0
+
+0000007c <test_2>:
+  7c:	00200193          	li	gp,2
+  80:	00002517          	auipc	a0,0x2
+  84:	71c50513          	addi	a0,a0,1820 # 279c <_end+0x79c>
+  88:	004005ef          	jal	a1,8c <test_2+0x10>
+  8c:	40b50533          	sub	a0,a0,a1
+  90:	000023b7          	lui	t2,0x2
+  94:	71038393          	addi	t2,t2,1808 # 2710 <_end+0x710>
+  98:	02751463          	bne	a0,t2,c0 <fail>
+
+0000009c <test_3>:
+  9c:	00300193          	li	gp,3
+  a0:	ffffe517          	auipc	a0,0xffffe
+  a4:	8fc50513          	addi	a0,a0,-1796 # ffffd99c <_end+0xffffb99c>
+  a8:	004005ef          	jal	a1,ac <test_3+0x10>
+  ac:	40b50533          	sub	a0,a0,a1
+  b0:	ffffe3b7          	lui	t2,0xffffe
+  b4:	8f038393          	addi	t2,t2,-1808 # ffffd8f0 <_end+0xffffb8f0>
+  b8:	00751463          	bne	a0,t2,c0 <fail>
+  bc:	00301863          	bne	zero,gp,cc <pass>
+
+000000c0 <fail>:
+  c0:	00100e13          	li	t3,1
+  c4:	00000e93          	li	t4,0
+
+000000c8 <fail_loop>:
+  c8:	0000006f          	j	c8 <fail_loop>
+
+000000cc <pass>:
+  cc:	00100e13          	li	t3,1
+  d0:	00100e93          	li	t4,1
+
+000000d4 <pass_loop>:
+  d4:	0000006f          	j	d4 <pass_loop>
+  d8:	c0001073          	unimp
+  dc:	0000                	unimp
+  de:	0000                	unimp
+  e0:	0000                	unimp
+  e2:	0000                	unimp
+  e4:	0000                	unimp
+  e6:	0000                	unimp
+  e8:	0000                	unimp
+  ea:	0000                	unimp
+  ec:	0000                	unimp
+  ee:	0000                	unimp
+  f0:	0000                	unimp
+  f2:	0000                	unimp
+  f4:	0000                	unimp
+  f6:	0000                	unimp
+  f8:	0000                	unimp
+  fa:	0000                	unimp

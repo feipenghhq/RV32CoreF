@@ -1,0 +1,153 @@
+
+generated/rv32ui-p-fence_i:     file format elf32-littleriscv
+
+
+Disassembly of section .text.init:
+
+00000000 <_start>:
+   0:	00000093          	li	ra,0
+   4:	00000113          	li	sp,0
+   8:	00000193          	li	gp,0
+   c:	00000213          	li	tp,0
+  10:	00000293          	li	t0,0
+  14:	00000313          	li	t1,0
+  18:	00000393          	li	t2,0
+  1c:	00000413          	li	s0,0
+  20:	00000493          	li	s1,0
+  24:	00000513          	li	a0,0
+  28:	00000593          	li	a1,0
+  2c:	00000613          	li	a2,0
+  30:	00000693          	li	a3,0
+  34:	00000713          	li	a4,0
+  38:	00000793          	li	a5,0
+  3c:	00000813          	li	a6,0
+  40:	00000893          	li	a7,0
+  44:	00000913          	li	s2,0
+  48:	00000993          	li	s3,0
+  4c:	00000a13          	li	s4,0
+  50:	00000a93          	li	s5,0
+  54:	00000b13          	li	s6,0
+  58:	00000b93          	li	s7,0
+  5c:	00000c13          	li	s8,0
+  60:	00000c93          	li	s9,0
+  64:	00000d13          	li	s10,0
+  68:	00000d93          	li	s11,0
+  6c:	00000e13          	li	t3,0
+  70:	00000e93          	li	t4,0
+  74:	00000f13          	li	t5,0
+  78:	00000f93          	li	t6,0
+  7c:	06f00693          	li	a3,111
+  80:	00002517          	auipc	a0,0x2
+  84:	f8051503          	lh	a0,-128(a0) # 2000 <begin_signature>
+  88:	00002597          	auipc	a1,0x2
+  8c:	f7a59583          	lh	a1,-134(a1) # 2002 <begin_signature+0x2>
+  90:	00000013          	nop
+  94:	00000013          	nop
+  98:	00000013          	nop
+  9c:	00000013          	nop
+  a0:	00000013          	nop
+  a4:	00000013          	nop
+  a8:	00000013          	nop
+  ac:	00000013          	nop
+  b0:	00000013          	nop
+  b4:	00000013          	nop
+  b8:	00000013          	nop
+  bc:	00000013          	nop
+  c0:	00002297          	auipc	t0,0x2
+  c4:	f4a29223          	sh	a0,-188(t0) # 2004 <begin_signature+0x4>
+  c8:	00002297          	auipc	t0,0x2
+  cc:	f2b29f23          	sh	a1,-194(t0) # 2006 <begin_signature+0x6>
+  d0:	0000100f          	fence.i
+  d4:	00002797          	auipc	a5,0x2
+  d8:	f3078793          	addi	a5,a5,-208 # 2004 <begin_signature+0x4>
+  dc:	00078367          	jalr	t1,a5
+
+000000e0 <test_2>:
+  e0:	00200193          	li	gp,2
+  e4:	00000013          	nop
+  e8:	1bc00393          	li	t2,444
+  ec:	06769a63          	bne	a3,t2,160 <fail>
+  f0:	06400713          	li	a4,100
+  f4:	fff70713          	addi	a4,a4,-1
+  f8:	fe071ee3          	bnez	a4,f4 <test_2+0x14>
+  fc:	00002297          	auipc	t0,0x2
+ 100:	f0a29823          	sh	a0,-240(t0) # 200c <begin_signature+0xc>
+ 104:	00002297          	auipc	t0,0x2
+ 108:	f0b29523          	sh	a1,-246(t0) # 200e <begin_signature+0xe>
+ 10c:	0000100f          	fence.i
+ 110:	00000013          	nop
+ 114:	00000013          	nop
+ 118:	00000013          	nop
+ 11c:	00000013          	nop
+ 120:	00000013          	nop
+ 124:	00000013          	nop
+ 128:	00000013          	nop
+ 12c:	00000013          	nop
+ 130:	00000013          	nop
+ 134:	00000013          	nop
+ 138:	00000013          	nop
+ 13c:	00000013          	nop
+ 140:	00002797          	auipc	a5,0x2
+ 144:	ecc78793          	addi	a5,a5,-308 # 200c <begin_signature+0xc>
+ 148:	00078367          	jalr	t1,a5
+
+0000014c <test_3>:
+ 14c:	00300193          	li	gp,3
+ 150:	00000013          	nop
+ 154:	30900393          	li	t2,777
+ 158:	00769463          	bne	a3,t2,160 <fail>
+ 15c:	00301863          	bne	zero,gp,16c <pass>
+
+00000160 <fail>:
+ 160:	00100e13          	li	t3,1
+ 164:	00000e93          	li	t4,0
+
+00000168 <fail_loop>:
+ 168:	0000006f          	j	168 <fail_loop>
+
+0000016c <pass>:
+ 16c:	00100e13          	li	t3,1
+ 170:	00100e93          	li	t4,1
+
+00000174 <pass_loop>:
+ 174:	0000006f          	j	174 <pass_loop>
+ 178:	c0001073          	unimp
+ 17c:	0000                	unimp
+ 17e:	0000                	unimp
+ 180:	0000                	unimp
+ 182:	0000                	unimp
+ 184:	0000                	unimp
+ 186:	0000                	unimp
+ 188:	0000                	unimp
+ 18a:	0000                	unimp
+ 18c:	0000                	unimp
+ 18e:	0000                	unimp
+ 190:	0000                	unimp
+ 192:	0000                	unimp
+ 194:	0000                	unimp
+ 196:	0000                	unimp
+ 198:	0000                	unimp
+ 19a:	0000                	unimp
+ 19c:	0000                	unimp
+ 19e:	0000                	unimp
+ 1a0:	0000                	unimp
+ 1a2:	0000                	unimp
+ 1a4:	0000                	unimp
+ 1a6:	0000                	unimp
+ 1a8:	0000                	unimp
+ 1aa:	0000                	unimp
+
+Disassembly of section .data:
+
+00002000 <begin_signature>:
+    2000:	14d68693          	addi	a3,a3,333
+    2004:	0de68693          	addi	a3,a3,222
+    2008:	000307e7          	jalr	a5,t1
+    200c:	22b68693          	addi	a3,a3,555
+    2010:	000307e7          	jalr	a5,t1
+    2014:	0000                	unimp
+    2016:	0000                	unimp
+    2018:	0000                	unimp
+    201a:	0000                	unimp
+    201c:	0000                	unimp
+    201e:	0000                	unimp
