@@ -97,7 +97,7 @@ Disassembly of section .text.init:
  124:	00900193          	li	gp,9
  128:	00000093          	li	ra,0
  12c:	00008137          	lui	sp,0x8
- 130:	fff10113          	addi	sp,sp,-1 # 7fff <_end+0x5fff>
+ 130:	fff10113          	addi	sp,sp,-1 # 7fff <begin_signature+0x79ef>
  134:	0020a733          	slt	a4,ra,sp
  138:	00100393          	li	t2,1
  13c:	40771463          	bne	a4,t2,544 <fail>
@@ -105,7 +105,7 @@ Disassembly of section .text.init:
 00000140 <test_10>:
  140:	00a00193          	li	gp,10
  144:	800000b7          	lui	ra,0x80000
- 148:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7fffdfff>
+ 148:	fff08093          	addi	ra,ra,-1 # 7fffffff <begin_signature+0x7ffff9ef>
  14c:	00000113          	li	sp,0
  150:	0020a733          	slt	a4,ra,sp
  154:	00000393          	li	t2,0
@@ -114,9 +114,9 @@ Disassembly of section .text.init:
 0000015c <test_11>:
  15c:	00b00193          	li	gp,11
  160:	800000b7          	lui	ra,0x80000
- 164:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7fffdfff>
+ 164:	fff08093          	addi	ra,ra,-1 # 7fffffff <begin_signature+0x7ffff9ef>
  168:	00008137          	lui	sp,0x8
- 16c:	fff10113          	addi	sp,sp,-1 # 7fff <_end+0x5fff>
+ 16c:	fff10113          	addi	sp,sp,-1 # 7fff <begin_signature+0x79ef>
  170:	0020a733          	slt	a4,ra,sp
  174:	00000393          	li	t2,0
  178:	3c771663          	bne	a4,t2,544 <fail>
@@ -125,7 +125,7 @@ Disassembly of section .text.init:
  17c:	00c00193          	li	gp,12
  180:	800000b7          	lui	ra,0x80000
  184:	00008137          	lui	sp,0x8
- 188:	fff10113          	addi	sp,sp,-1 # 7fff <_end+0x5fff>
+ 188:	fff10113          	addi	sp,sp,-1 # 7fff <begin_signature+0x79ef>
  18c:	0020a733          	slt	a4,ra,sp
  190:	00100393          	li	t2,1
  194:	3a771863          	bne	a4,t2,544 <fail>
@@ -133,7 +133,7 @@ Disassembly of section .text.init:
 00000198 <test_13>:
  198:	00d00193          	li	gp,13
  19c:	800000b7          	lui	ra,0x80000
- 1a0:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7fffdfff>
+ 1a0:	fff08093          	addi	ra,ra,-1 # 7fffffff <begin_signature+0x7ffff9ef>
  1a4:	ffff8137          	lui	sp,0xffff8
  1a8:	0020a733          	slt	a4,ra,sp
  1ac:	00000393          	li	t2,0

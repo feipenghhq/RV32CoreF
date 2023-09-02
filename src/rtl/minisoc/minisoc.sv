@@ -73,7 +73,7 @@ module minisoc (
     // Decode logic for GPIO and data RAM
     // --------------------------------------
 
-    assign decode_is_dram = dram_addr[31:28] == 4'h1;
+    assign decode_is_dram = (dram_addr[31:28] == 4'h1) || (dram_addr[31:28] == 4'h0);
     assign decode_is_gpio = dram_addr[31:28] == 4'h2;
 
     assign gpio_req   = dram_req & decode_is_gpio;
@@ -88,7 +88,7 @@ module minisoc (
     assign data_addr  = dram_addr[15:0];
     assign data_wdata = dram_wdata;
 
-    assign dram_addr_ok = (decode_is_gpio & gpio_addr_ok) | (decode_is_dram & dram_addr_ok);
+    assign dram_addr_ok = (decode_is_gpio & gpio_addr_ok) | (decode_is_dram & data_addr_ok);
     // For simplicity, we just OR the data_ok assuming the following conditions hold true:
     //  1.) data_ok is onehot and only one target receives the request each time.
     //  2.) target device should only drive data_ok to high whenever its data is ready.
@@ -102,15 +102,15 @@ module minisoc (
 
     core u_core (.*);
 
-    // create a 32x32K RAM to hold both the instruction and data
-    ram  #(.AW(16), .DW(`XLEN))
+    // create a 4KB RAM to hold both the instruction and data
+    ram  #(.AW(10), .DW(`XLEN))
     memory
     (
         .clk(clk),
         .instr_req(iram_req),
         .instr_write(iram_write),
         .instr_wstrb(iram_wstrb),
-        .instr_addr(iram_addr[15:0]),
+        .instr_addr(iram_addr[11:2]),
         .instr_wdata(iram_wdata),
         .instr_addr_ok(iram_addr_ok),
         .instr_data_ok(iram_data_ok),
@@ -118,7 +118,7 @@ module minisoc (
         .data_req(data_req),
         .data_write(data_write),
         .data_wstrb(data_wstrb),
-        .data_addr(data_addr[15:0]),
+        .data_addr(data_addr[11:2]),
         .data_wdata(data_wdata),
         .data_addr_ok(data_addr_ok),
         .data_data_ok(data_data_ok),

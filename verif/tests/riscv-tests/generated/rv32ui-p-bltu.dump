@@ -98,7 +98,7 @@ Disassembly of section .text.init:
  130:	00800193          	li	gp,8
  134:	800000b7          	lui	ra,0x80000
  138:	80000137          	lui	sp,0x80000
- 13c:	fff10113          	addi	sp,sp,-1 # 7fffffff <_end+0x7fffdfff>
+ 13c:	fff10113          	addi	sp,sp,-1 # 7fffffff <begin_signature+0x7ffffbaf>
  140:	0020e463          	bltu	ra,sp,148 <test_8+0x18>
  144:	00301463          	bne	zero,gp,14c <test_8+0x1c>
  148:	22301463          	bne	zero,gp,370 <fail>
@@ -109,7 +109,7 @@ Disassembly of section .text.init:
  154:	00000213          	li	tp,0
  158:	f00000b7          	lui	ra,0xf0000
  15c:	f0000137          	lui	sp,0xf0000
- 160:	fff10113          	addi	sp,sp,-1 # efffffff <_end+0xefffdfff>
+ 160:	fff10113          	addi	sp,sp,-1 # efffffff <begin_signature+0xeffffbaf>
  164:	2020e663          	bltu	ra,sp,370 <fail>
  168:	00120213          	addi	tp,tp,1 # 1 <_start+0x1>
  16c:	00200293          	li	t0,2
@@ -120,7 +120,7 @@ Disassembly of section .text.init:
  178:	00000213          	li	tp,0
  17c:	f00000b7          	lui	ra,0xf0000
  180:	f0000137          	lui	sp,0xf0000
- 184:	fff10113          	addi	sp,sp,-1 # efffffff <_end+0xefffdfff>
+ 184:	fff10113          	addi	sp,sp,-1 # efffffff <begin_signature+0xeffffbaf>
  188:	00000013          	nop
  18c:	1e20e263          	bltu	ra,sp,370 <fail>
  190:	00120213          	addi	tp,tp,1 # 1 <_start+0x1>
@@ -132,7 +132,7 @@ Disassembly of section .text.init:
  1a0:	00000213          	li	tp,0
  1a4:	f00000b7          	lui	ra,0xf0000
  1a8:	f0000137          	lui	sp,0xf0000
- 1ac:	fff10113          	addi	sp,sp,-1 # efffffff <_end+0xefffdfff>
+ 1ac:	fff10113          	addi	sp,sp,-1 # efffffff <begin_signature+0xeffffbaf>
  1b0:	00000013          	nop
  1b4:	00000013          	nop
  1b8:	1a20ec63          	bltu	ra,sp,370 <fail>
@@ -146,7 +146,7 @@ Disassembly of section .text.init:
  1d0:	f00000b7          	lui	ra,0xf0000
  1d4:	00000013          	nop
  1d8:	f0000137          	lui	sp,0xf0000
- 1dc:	fff10113          	addi	sp,sp,-1 # efffffff <_end+0xefffdfff>
+ 1dc:	fff10113          	addi	sp,sp,-1 # efffffff <begin_signature+0xeffffbaf>
  1e0:	1820e863          	bltu	ra,sp,370 <fail>
  1e4:	00120213          	addi	tp,tp,1 # 1 <_start+0x1>
  1e8:	00200293          	li	t0,2
@@ -158,7 +158,7 @@ Disassembly of section .text.init:
  1f8:	f00000b7          	lui	ra,0xf0000
  1fc:	00000013          	nop
  200:	f0000137          	lui	sp,0xf0000
- 204:	fff10113          	addi	sp,sp,-1 # efffffff <_end+0xefffdfff>
+ 204:	fff10113          	addi	sp,sp,-1 # efffffff <begin_signature+0xeffffbaf>
  208:	00000013          	nop
  20c:	1620e263          	bltu	ra,sp,370 <fail>
  210:	00120213          	addi	tp,tp,1 # 1 <_start+0x1>
@@ -172,7 +172,7 @@ Disassembly of section .text.init:
  228:	00000013          	nop
  22c:	00000013          	nop
  230:	f0000137          	lui	sp,0xf0000
- 234:	fff10113          	addi	sp,sp,-1 # efffffff <_end+0xefffdfff>
+ 234:	fff10113          	addi	sp,sp,-1 # efffffff <begin_signature+0xeffffbaf>
  238:	1220ec63          	bltu	ra,sp,370 <fail>
  23c:	00120213          	addi	tp,tp,1 # 1 <_start+0x1>
  240:	00200293          	li	t0,2
@@ -183,7 +183,7 @@ Disassembly of section .text.init:
  24c:	00000213          	li	tp,0
  250:	f00000b7          	lui	ra,0xf0000
  254:	f0000137          	lui	sp,0xf0000
- 258:	fff10113          	addi	sp,sp,-1 # efffffff <_end+0xefffdfff>
+ 258:	fff10113          	addi	sp,sp,-1 # efffffff <begin_signature+0xeffffbaf>
  25c:	1020ea63          	bltu	ra,sp,370 <fail>
  260:	00120213          	addi	tp,tp,1 # 1 <_start+0x1>
  264:	00200293          	li	t0,2
@@ -194,7 +194,7 @@ Disassembly of section .text.init:
  270:	00000213          	li	tp,0
  274:	f00000b7          	lui	ra,0xf0000
  278:	f0000137          	lui	sp,0xf0000
- 27c:	fff10113          	addi	sp,sp,-1 # efffffff <_end+0xefffdfff>
+ 27c:	fff10113          	addi	sp,sp,-1 # efffffff <begin_signature+0xeffffbaf>
  280:	00000013          	nop
  284:	0e20e663          	bltu	ra,sp,370 <fail>
  288:	00120213          	addi	tp,tp,1 # 1 <_start+0x1>
@@ -206,7 +206,7 @@ Disassembly of section .text.init:
  298:	00000213          	li	tp,0
  29c:	f00000b7          	lui	ra,0xf0000
  2a0:	f0000137          	lui	sp,0xf0000
- 2a4:	fff10113          	addi	sp,sp,-1 # efffffff <_end+0xefffdfff>
+ 2a4:	fff10113          	addi	sp,sp,-1 # efffffff <begin_signature+0xeffffbaf>
  2a8:	00000013          	nop
  2ac:	00000013          	nop
  2b0:	0c20e063          	bltu	ra,sp,370 <fail>
@@ -220,7 +220,7 @@ Disassembly of section .text.init:
  2c8:	f00000b7          	lui	ra,0xf0000
  2cc:	00000013          	nop
  2d0:	f0000137          	lui	sp,0xf0000
- 2d4:	fff10113          	addi	sp,sp,-1 # efffffff <_end+0xefffdfff>
+ 2d4:	fff10113          	addi	sp,sp,-1 # efffffff <begin_signature+0xeffffbaf>
  2d8:	0820ec63          	bltu	ra,sp,370 <fail>
  2dc:	00120213          	addi	tp,tp,1 # 1 <_start+0x1>
  2e0:	00200293          	li	t0,2
@@ -232,7 +232,7 @@ Disassembly of section .text.init:
  2f0:	f00000b7          	lui	ra,0xf0000
  2f4:	00000013          	nop
  2f8:	f0000137          	lui	sp,0xf0000
- 2fc:	fff10113          	addi	sp,sp,-1 # efffffff <_end+0xefffdfff>
+ 2fc:	fff10113          	addi	sp,sp,-1 # efffffff <begin_signature+0xeffffbaf>
  300:	00000013          	nop
  304:	0620e663          	bltu	ra,sp,370 <fail>
  308:	00120213          	addi	tp,tp,1 # 1 <_start+0x1>
@@ -246,7 +246,7 @@ Disassembly of section .text.init:
  320:	00000013          	nop
  324:	00000013          	nop
  328:	f0000137          	lui	sp,0xf0000
- 32c:	fff10113          	addi	sp,sp,-1 # efffffff <_end+0xefffdfff>
+ 32c:	fff10113          	addi	sp,sp,-1 # efffffff <begin_signature+0xeffffbaf>
  330:	0420e063          	bltu	ra,sp,370 <fail>
  334:	00120213          	addi	tp,tp,1 # 1 <_start+0x1>
  338:	00200293          	li	t0,2
@@ -256,7 +256,7 @@ Disassembly of section .text.init:
  340:	01500193          	li	gp,21
  344:	00100093          	li	ra,1
  348:	00106a63          	bltu	zero,ra,35c <test_21+0x1c>
- 34c:	00108093          	addi	ra,ra,1 # f0000001 <_end+0xefffe001>
+ 34c:	00108093          	addi	ra,ra,1 # f0000001 <begin_signature+0xeffffbb1>
  350:	00108093          	addi	ra,ra,1
  354:	00108093          	addi	ra,ra,1
  358:	00108093          	addi	ra,ra,1

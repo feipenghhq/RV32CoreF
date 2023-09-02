@@ -110,34 +110,34 @@ Disassembly of section .text.init:
 00000144 <test_12>:
  144:	00c00193          	li	gp,12
  148:	212120b7          	lui	ra,0x21212
- 14c:	12108093          	addi	ra,ra,289 # 21212121 <_end+0x21210121>
+ 14c:	12108093          	addi	ra,ra,289 # 21212121 <begin_signature+0x21211d51>
  150:	00009713          	slli	a4,ra,0x0
  154:	212123b7          	lui	t2,0x21212
- 158:	12138393          	addi	t2,t2,289 # 21212121 <_end+0x21210121>
+ 158:	12138393          	addi	t2,t2,289 # 21212121 <begin_signature+0x21211d51>
  15c:	1a771263          	bne	a4,t2,300 <fail>
 
 00000160 <test_13>:
  160:	00d00193          	li	gp,13
  164:	212120b7          	lui	ra,0x21212
- 168:	12108093          	addi	ra,ra,289 # 21212121 <_end+0x21210121>
+ 168:	12108093          	addi	ra,ra,289 # 21212121 <begin_signature+0x21211d51>
  16c:	00109713          	slli	a4,ra,0x1
  170:	424243b7          	lui	t2,0x42424
- 174:	24238393          	addi	t2,t2,578 # 42424242 <_end+0x42422242>
+ 174:	24238393          	addi	t2,t2,578 # 42424242 <begin_signature+0x42423e72>
  178:	18771463          	bne	a4,t2,300 <fail>
 
 0000017c <test_14>:
  17c:	00e00193          	li	gp,14
  180:	212120b7          	lui	ra,0x21212
- 184:	12108093          	addi	ra,ra,289 # 21212121 <_end+0x21210121>
+ 184:	12108093          	addi	ra,ra,289 # 21212121 <begin_signature+0x21211d51>
  188:	00709713          	slli	a4,ra,0x7
  18c:	909093b7          	lui	t2,0x90909
- 190:	08038393          	addi	t2,t2,128 # 90909080 <_end+0x90907080>
+ 190:	08038393          	addi	t2,t2,128 # 90909080 <begin_signature+0x90908cb0>
  194:	16771663          	bne	a4,t2,300 <fail>
 
 00000198 <test_15>:
  198:	00f00193          	li	gp,15
  19c:	212120b7          	lui	ra,0x21212
- 1a0:	12108093          	addi	ra,ra,289 # 21212121 <_end+0x21210121>
+ 1a0:	12108093          	addi	ra,ra,289 # 21212121 <begin_signature+0x21211d51>
  1a4:	00e09713          	slli	a4,ra,0xe
  1a8:	484843b7          	lui	t2,0x48484
  1ac:	14771a63          	bne	a4,t2,300 <fail>
@@ -145,7 +145,7 @@ Disassembly of section .text.init:
 000001b0 <test_16>:
  1b0:	01000193          	li	gp,16
  1b4:	212120b7          	lui	ra,0x21212
- 1b8:	12108093          	addi	ra,ra,289 # 21212121 <_end+0x21210121>
+ 1b8:	12108093          	addi	ra,ra,289 # 21212121 <begin_signature+0x21211d51>
  1bc:	01f09713          	slli	a4,ra,0x1f
  1c0:	800003b7          	lui	t2,0x80000
  1c4:	12771e63          	bne	a4,t2,300 <fail>
