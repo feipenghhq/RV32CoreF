@@ -22,7 +22,7 @@ module decoder (
     input logic [`XLEN-1:0]             instruction,
     // contrl signal to downstrem pipeline stage
     output logic [`ALU_OP_WIDTH-1:0]    dec_alu_opcode,     // alu opcode
-    output logic                        dec_alu_src1_sel_pc,    // alu src1 select
+    output logic [`ALU_SRC1_WIDTH-1:0]  dec_alu_src1_sel,   // alu src1 select
     output logic                        dec_alu_src2_sel_imm,   // alu src2 select
     output logic                        dec_branch,         // branch instruction
     output logic [`BRANCH_OP_WIDTH-1:0] dec_branch_opcode,  // branch opcode
@@ -81,7 +81,7 @@ module decoder (
     logic is_load;
     logic is_store;
 
-    logic ls_is_unsigned;
+    logic load_is_unsigned;
     logic ls_is_half;
     logic ls_is_byte;
     logic ls_is_word;
@@ -108,7 +108,7 @@ module decoder (
     assign i_type_imm_val = {{20{instruction[31]}}, instruction[31:20]};
     assign j_type_imm_val = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
     assign s_type_imm_val = {{20{instruction[31]}}, instruction[31:25], instruction[11:7]};
-    assign b_type_imm_val = {{20{instruction[31]}}, instruction[11],instruction[30:25],instruction[11:8], 1'b0};
+    assign b_type_imm_val = {{20{instruction[31]}}, instruction[7],instruction[30:25],instruction[11:8], 1'b0};
 
     // -------------------------------------------
     // Decode the instruction
@@ -124,22 +124,22 @@ module decoder (
     assign is_itype = phase3 & (rv32i_opcode == `RV32I_OPCODE_ITYPE);
     assign is_rtype = phase3 & (rv32i_opcode == `RV32I_OPCODE_RTYPE);
 
-    assign is_add  = (rv32i_funct3 == `RV32I_FUNC3_ADD) & ~instruction[30];
-    assign is_sub  = (rv32i_funct3 == `RV32I_FUNC3_SUB) & instruction[30];
-    assign is_sll  = (rv32i_funct3 == `RV32I_FUNC3_SLL);
-    assign is_slt  = (rv32i_funct3 == `RV32I_FUNC3_SLT);
-    assign is_sltu = (rv32i_funct3 == `RV32I_FUNC3_SLTU);
-    assign is_xor  = (rv32i_funct3 == `RV32I_FUNC3_XOR);
-    assign is_srl  = (rv32i_funct3 == `RV32I_FUNC3_SRL) & ~instruction[30];
-    assign is_sra  = (rv32i_funct3 == `RV32I_FUNC3_SRA) & instruction[30];
-    assign is_or   = (rv32i_funct3 == `RV32I_FUNC3_OR);
-    assign is_and  = (rv32i_funct3 == `RV32I_FUNC3_AND);
+    assign is_add  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_ADD) & (is_itype | is_rtype & ~instruction[30]);
+    assign is_sub  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_SUB) & (is_rtype & instruction[30]);
+    assign is_sll  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_SLL);
+    assign is_slt  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_SLT);
+    assign is_sltu = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_SLTU);
+    assign is_xor  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_XOR);
+    assign is_srl  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_SRL) & ~instruction[30];
+    assign is_sra  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_SRA) & instruction[30];
+    assign is_or   = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_OR);
+    assign is_and  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_AND);
 
     // Load and Store
     assign is_load  = phase3 & (rv32i_opcode == `RV32I_OPCODE_LOAD);
     assign is_store = phase3 & (rv32i_opcode == `RV32I_OPCODE_STORE);
 
-    assign ls_is_unsigned = rv32i_funct3[2];
+    assign load_is_unsigned = is_load & rv32i_funct3[2];
     assign ls_is_byte = (rv32i_funct3[1:0] == 2'h0);
     assign ls_is_half = (rv32i_funct3[1:0] == 2'h1);
     assign ls_is_word = (rv32i_funct3[1:0] == 2'h2);
@@ -152,7 +152,7 @@ module decoder (
     assign is_bge  = is_branch & (rv32i_funct3 == `RV32I_FUNC3_BGE);
     assign is_bltu = is_branch & (rv32i_funct3 == `RV32I_FUNC3_BLTU);
     assign is_bgeu = is_branch & (rv32i_funct3 == `RV32I_FUNC3_BGEU);
-    assign branch_is_unsigned = rv32i_funct3[1];
+    assign branch_is_unsigned = is_branch & rv32i_funct3[1];
 
     // Illegal Instruction
     //assign illegal_instr = ~(is_lui   | is_auipc | is_jal  | is_jalr  |
@@ -164,19 +164,20 @@ module decoder (
     // register address
     assign dec_rs1_addr = instruction[19:15];
     assign dec_rs2_addr = instruction[24:20];
-    assign dec_rd_addr  = instruction[24:20];
+    assign dec_rd_addr  = instruction[11:7];
 
     // select pc
-    assign dec_alu_src1_sel_pc = is_jal | is_auipc | is_branch;
+    assign dec_alu_src1_sel[`ALU_SRC1_PC] = is_jal | is_auipc | is_branch;
+    assign dec_alu_src1_sel[`ALU_SRC1_ZERO] = is_lui;
 
     // select immediate value
-    assign dec_alu_src2_sel_imm = dec_jump | is_branch | is_lui | is_auipc | is_itype;
+    assign dec_alu_src2_sel_imm = dec_jump | is_branch | is_lui | is_auipc | is_itype | is_load | is_store;
 
-    assign dec_alu_opcode[`ALU_OP_ADD] = is_add;
-    assign dec_alu_opcode[`ALU_OP_SUB] = is_sub | is_beq | is_bne;
+    assign dec_alu_opcode[`ALU_OP_ADD] = is_add | is_branch | is_lui | is_auipc | is_load | is_store;
+    assign dec_alu_opcode[`ALU_OP_SUB] = is_sub;
     assign dec_alu_opcode[`ALU_OP_SLL] = is_sll;
-    assign dec_alu_opcode[`ALU_OP_SLT] = is_slt | is_blt | is_bge;
-    assign dec_alu_opcode[`ALU_OP_SLTU] = is_sltu | is_bltu | is_bgeu;
+    assign dec_alu_opcode[`ALU_OP_SLT] = is_slt ;
+    assign dec_alu_opcode[`ALU_OP_SLTU] = is_sltu;
     assign dec_alu_opcode[`ALU_OP_XOR] = is_xor;
     assign dec_alu_opcode[`ALU_OP_SRL] = is_srl;
     assign dec_alu_opcode[`ALU_OP_SRA] = is_sra;
@@ -199,7 +200,7 @@ module decoder (
     assign dec_branch_opcode[`BRANCH_OP_LT] = rv32i_funct3[2];      // OP_LT encode both blt(u) and bge(u)
     assign dec_branch_opcode[`BRANCH_OP_NEGATE] = rv32i_funct3[0];  // OP_NEGATE distinguish beq/bne and blt(u)/bge(u)
 
-    assign dec_unsign = ls_is_unsigned | branch_is_unsigned;
+    assign dec_unsign = load_is_unsigned | branch_is_unsigned;
 
     assign is_i_type_imm = is_jalr | is_itype | is_load;
     assign is_u_type_imm = is_lui | is_auipc;
@@ -211,4 +212,5 @@ module decoder (
                            ({32{is_j_type_imm}} & j_type_imm_val) |
                            ({32{is_s_type_imm}} & s_type_imm_val) |
                            ({32{is_b_type_imm}} & b_type_imm_val) ;
+
 endmodule

@@ -46,8 +46,8 @@ module WB (
 
     // Pipeline Control
     assign wb_valid = wb_pipe_valid;
-    assign wb_pipe_done = 1'b0;
-    assign wb_pipe_ready = wb_pipe_ready & wb_pipe_done;
+    assign wb_pipe_done = 1'b1;
+    assign wb_pipe_ready = wb_pipe_done;
     assign wb_pipe_req = wb_pipe_done & wb_valid;
     assign wb_pipe_flush = 1'b0;
 

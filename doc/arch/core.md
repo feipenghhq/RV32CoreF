@@ -29,11 +29,11 @@ In ordering to simply the pipeline control for stall,  we use the request/ready 
 
 Status of handshaking signals:
 
-| `<stageX>_pipe_req` | `<stageX+1>_pipe_ready` | comments                                                     |
-| ------------------- | ----------------------- | ------------------------------------------------------------ |
-| 0                   | 1                       | Pipeline Stalled from X+1 stage                              |
-| 1                   | 1                       | Pipeline Stalled from X+1 stage                              |
-| 0                   | 0                       | Insert a bubble to stage X + 1                               |
+| `<stageX>_pipe_req` | `<stageX+1>_pipe_ready` | comments                                                                  |
+| ------------------- | ----------------------- | ------------------------------------------------------------------------- |
+| 0                   | 1                       | Pipeline Stalled from X+1 stage                                           |
+| 1                   | 1                       | Pipeline Stalled from X+1 stage                                           |
+| 0                   | 0                       | Insert a bubble to stage X + 1                                            |
 | 1                   | 0                       | Successful handshake. Valid data is transferred from stage X to stage X+1 |
 
 #### Other pipeline control signal
@@ -104,7 +104,7 @@ So in our IF stage, if we send memory read request at clock cycle X, then the re
 In order to fix this issue, we have 2 potential solutions:
 
 - Solution 1: Send the RAM read request at IF stage using current PC as address, then the instruction is available in ID stage. **In this design, the instruction read from Instruction RAM should NOT be flopped into the IF/ID pipeline stage registers, ID stage should directly consume the result from instruction RAM read data**
-- Solution 2: Send the RAM read request while using next PC value as address, then the instruction is available in IF stage. 
+- Solution 2: Send the RAM read request while using next PC value as address, then the instruction is available in IF stage.
 
 Using solution introducing a imaginary stage before the IF stage whose PC value is next PC (usually PC + 4). We call this imaginary stage as pre-IF stage. It is imaginary because there is no stage pipeline for it. Or we can say the stage pipeline is PC register itself.
 
@@ -126,12 +126,12 @@ With introduction of the SRAM bus (see ![SRAM Bus] session),  we need to conside
 
 For pre-IF stage, considering pre-IF_pipe_done and IF_pipe_ready, there are 4 possible situation:
 
-| pre-IF_pipe_done | IF_pipe_ready | Comments                                                     |
-| ---------------- | ------------- | ------------------------------------------------------------ |
+| pre-IF_pipe_done | IF_pipe_ready | Comments                                                                                                                 |
+| ---------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | 0                | 0             | Bus is busy and has not taken the read request. Continue assert the bus request and wait for the bus to take the request |
 | 0                | 1             | Bus is busy and has not taken the read request. Continue assert the bus request and wait for the bus to take the request |
-| 1                | 1             | Bus is ready and take the read request, IF stage is also ready so we can go to IF stage to wait for the data |
-| 1                | 0             | Bus is ready and take the read request, but IF stage is busy. This is complex case which needs more analysis |
+| 1                | 1             | Bus is ready and take the read request, IF stage is also ready so we can go to IF stage to wait for the data             |
+| 1                | 0             | Bus is ready and take the read request, but IF stage is busy. This is complex case which needs more analysis             |
 
 For the 4th situation, there are 2 potential issues:
 
@@ -149,11 +149,11 @@ We implemented both of the solution in our design. We provide a macro for user t
 
 For IF stage, considering IF_pipe_done and ID_pipe_ready, similar to previous one, there are also 4 possible situation.
 
-| IF_pipe_done | ID_pipe_ready | Comments                                                     |
-| ------------ | ------------- | ------------------------------------------------------------ |
-| 0            | 0             | Bus is busy and has not return the data. Continue to wait for the data. |
-| 0            | 1             | Bus is busy and has not return the data. Continue to wait for the data. |
-| 1            | 1             | Bus is ready and ID stage is able to take the data. We can proceed to ID stage |
+| IF_pipe_done | ID_pipe_ready | Comments                                                                                               |
+| ------------ | ------------- | ------------------------------------------------------------------------------------------------------ |
+| 0            | 0             | Bus is busy and has not return the data. Continue to wait for the data.                                |
+| 0            | 1             | Bus is busy and has not return the data. Continue to wait for the data.                                |
+| 1            | 1             | Bus is ready and ID stage is able to take the data. We can proceed to ID stage                         |
 | 1            | 0             | Bus is ready and ID stage is not able to take the data. This is complex case which needs more analysis |
 
 For the 4th situation there is only one solution: Use additional register to save the data (instruction) coming back from IF stage if ID stage is not able to take it due to ready signal being 0. When ID stage is ready, take the data from the register.
@@ -216,6 +216,7 @@ Input Signal 1:
 | ------------ | ----------------------------------------- |
 | register rs1 | R-type instruction/Store/Load/Branch/JALR |
 | PC           | AUIPC/JAL/Branch                          |
+| 0            | LUI                                       |
 
 Input Signal 2:
 
@@ -299,14 +300,14 @@ There are several source of the write data:
 
 ## CPU Core Configuration
 
-The following macro control different configuration to provide trade-off between complexity, performance and area. 
+The following macro control different configuration to provide trade-off between complexity, performance and area.
 
-| Macro Name                     | Comment                                                      |
-| ------------------------------ | ------------------------------------------------------------ |
+| Macro Name                     | Comment                                                                                      |
+| ------------------------------ | -------------------------------------------------------------------------------------------- |
 | CORE_PREIF_USE_SHADOW_REGISTER | Use shadow register in pre-IF stage to hold instruction due to IF stall (IF_pipe_ready == 0) |
-|                                |                                                              |
-|                                |                                                              |
-|                                |                                                              |
+|                                |                                                                                              |
+|                                |                                                                                              |
+|                                |                                                                                              |
 
 
 

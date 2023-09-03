@@ -50,13 +50,13 @@ run_riscv_tests: riscv_tests_pre $(riscv_tests) riscv_tests_summary
 
 # Print out the summary of the tests
 riscv_tests_summary:
-	@echo ""
-	@echo "-------- Test Summary --------"
-	@echo "Number of passed test:" `grep PASS riscv_tests.log -c`
-	@echo "Number of failed test:" `grep FAIL riscv_tests.log -c`
-	@echo "Number of timeout test:" `grep "TIMEOUT" riscv_tests.log -c`
-	@echo "Summary of failed test:" `grep -B 1 FAIL riscv_tests.log | grep "\w*\-\w*\-\w*.verilog" -o`
-	@echo "Summary of timeout test:" `grep -B 1 TIMEOUT riscv_tests.log | grep "\w*\-\w*\-\w*.verilog" -o`
+	@echo "" | tee -a riscv_tests.log
+	@echo "-------- Test Summary --------" | tee -a riscv_tests.log
+	@echo "Number of passed test:" `grep PASS riscv_tests.log -c` | tee -a riscv_tests.log
+	@echo "Number of failed test:" `grep FAIL riscv_tests.log -c` | tee -a riscv_tests.log
+	@echo "Number of timeout test:" `grep "TIMEOUT" riscv_tests.log -c` | tee -a riscv_tests.log
+	@echo "Summary of failed test:" `grep -B 1 FAIL riscv_tests.log | grep "\w*\-\w*\-\w*.verilog" -o` | tee -a riscv_tests.log
+	@echo "Summary of timeout test:" `grep -B 1 TIMEOUT riscv_tests.log | grep "\w*\-\w*\-\w*.verilog" -o` | tee -a riscv_tests.log
 
 # clean up the log files and the memory files before running simulation
 riscv_tests_pre:

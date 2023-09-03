@@ -79,14 +79,14 @@ module MEM (
 
     // Pipeline Control
     assign mem_valid = mem_pipe_valid & ~wb_pipe_flush;
-    assign mem_pipe_done = load_done;
-    assign mem_pipe_ready = wb_pipe_ready & mem_pipe_done;
+    assign mem_pipe_done = ~mem_pipe_mem_read | load_done;
+    assign mem_pipe_ready = ~mem_valid | wb_pipe_ready & mem_pipe_done;
     assign mem_pipe_req = mem_pipe_done & mem_valid;
     assign mem_pipe_flush = wb_pipe_flush;
 
     // Pipeline Register Update
     always @(posedge clk) begin
-        if      (rst_b)         wb_pipe_valid <= 1'b0;
+        if      (!rst_b)        wb_pipe_valid <= 1'b0;
         else if (wb_pipe_ready) wb_pipe_valid <= mem_pipe_req;
     end
 
@@ -136,8 +136,7 @@ module MEM (
     // --------------------------------------
     // Forward logic to ID stage
     // --------------------------------------
-    // no need to check if ex_valid, if ex is not valid, then the dependency by nature would be failed.
-    assign mem_rd_write = mem_pipe_rd_write;
+    assign mem_rd_write = mem_pipe_rd_write & mem_pipe_valid;
     assign mem_rd_addr = mem_pipe_rd_addr;
     assign mem_rd_wdata = rd_data;
 

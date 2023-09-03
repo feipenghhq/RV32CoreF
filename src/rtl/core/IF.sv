@@ -59,7 +59,7 @@ module IF (
 
     // Pipeline Register Update
     always @(posedge clk) begin
-        if      (rst_b)         id_pipe_valid <= 1'b0;
+        if      (!rst_b)        id_pipe_valid <= 1'b0;
         else if (id_pipe_ready) id_pipe_valid <= if_pipe_req & ~id_pipe_flush;
     end
 

@@ -23,7 +23,7 @@ module EX (
     input  logic [`XLEN-1:0]            ex_pipe_pc,
     input  logic [`XLEN-1:0]            ex_pipe_instruction,
     input  logic [`ALU_OP_WIDTH-1:0]    ex_pipe_alu_opcode,
-    input  logic                        ex_pipe_alu_src1_sel_pc,
+    input  logic [`ALU_SRC1_WIDTH-1:0]  ex_pipe_alu_src1_sel,
     input  logic                        ex_pipe_alu_src2_sel_imm,
     input  logic                        ex_pipe_branch,
     input  logic [`BRANCH_OP_WIDTH-1:0] ex_pipe_branch_opcode,
@@ -80,7 +80,7 @@ module EX (
     logic [`XLEN-1:0] alu_src2;
 
     // Memory Control
-    logic       drem_done;
+    logic       dram_done;
     logic [3:0] wstrb_byte;
     logic [3:0] wstrb_half;
     logic [3:0] wstrb_word;
@@ -94,20 +94,29 @@ module EX (
     logic [`XLEN-1:0]   branch_cal_result;
     logic               exc_ins_addr_mis;
 
+    // ALU SRC1 Selection
+    logic               alu_src1_sel_pc;
+    logic               alu_src1_sel_zero;
+    logic               alu_src1_sel_rs1;
+
+    // MISC
+    logic [`XLEN-1:0]   pc_plus4;
+    logic [`XLEN-1:0]   final_alu_result;
+
     // --------------------------------------
     // Pipeline Logic
     // --------------------------------------
 
     // Pipeline Control
     assign ex_valid = ex_pipe_valid & ~mem_pipe_flush;
-    assign ex_pipe_done = drem_done;
-    assign ex_pipe_ready = mem_pipe_ready & ex_pipe_done;
+    assign ex_pipe_done = ~dram_req | dram_done;
+    assign ex_pipe_ready = ~ex_valid | mem_pipe_ready & ex_pipe_done;
     assign ex_pipe_req = ex_pipe_done & ex_valid;
     assign ex_pipe_flush = ex_branch | mem_pipe_flush;
 
     // Pipeline Register Update
     always @(posedge clk) begin
-        if      (rst_b)          mem_pipe_valid <= 1'b0;
+        if      (!rst_b)         mem_pipe_valid <= 1'b0;
         else if (mem_pipe_ready) mem_pipe_valid <= ex_pipe_req;
     end
 
@@ -119,7 +128,7 @@ module EX (
         mem_pipe_unsign <= ex_pipe_unsign;
         mem_pipe_rd_write <= ex_pipe_rd_write;
         mem_pipe_rd_addr <= ex_pipe_rd_addr;
-        mem_pipe_alu_result <= alu_result;
+        mem_pipe_alu_result <= final_alu_result;
     end
 
     // --------------------------------------
@@ -182,21 +191,32 @@ module EX (
     assign wstrb_word = {4{ex_pipe_mem_opcode[`MEM_OP_WORD]}};
     assign dram_wstrb = wstrb_byte | wstrb_half | wstrb_word;
 
-    assign drem_done = dram_req & dram_addr_ok;
+    assign dram_done = ex_pipe_valid & dram_req & dram_addr_ok;
 
     // --------------------------------------
     // ALU src select
     // --------------------------------------
-    assign alu_src1 = ex_pipe_alu_src1_sel_pc ? ex_pipe_pc : ex_pipe_rs1_rdata;
+    assign alu_src1_sel_pc = ex_pipe_alu_src1_sel[`ALU_SRC1_PC];
+    assign alu_src1_sel_zero = ex_pipe_alu_src1_sel[`ALU_SRC1_ZERO];
+    assign alu_src1_sel_rs1 = ~(alu_src1_sel_pc | alu_src1_sel_zero);
+    assign alu_src1 = ({`XLEN{alu_src1_sel_pc}} & ex_pipe_pc) |
+                      ({`XLEN{alu_src1_sel_zero}} & {`XLEN{1'b0}}) |
+                      ({`XLEN{alu_src1_sel_rs1}} & ex_pipe_rs1_rdata);
     assign alu_src2 = ex_pipe_alu_src2_sel_imm ? ex_pipe_immediate : ex_pipe_rs2_rdata;
+
+    // --------------------------------------
+    // Final EX stage result
+    // --------------------------------------
+    // for JAL/JALR, pc + 4 is written into rd so we need to select between ALU output and pc + 4
+    assign pc_plus4 = ex_pipe_pc + 4;
+    assign final_alu_result = ex_pipe_jump ? pc_plus4 : alu_result;
 
     // --------------------------------------
     // Forward logic to ID stage
     // --------------------------------------
-    // no need to check if ex_valid, if ex is not valid, then the dependency by nature would be failed.
-    assign ex_rd_write = ex_pipe_rd_write;
+    assign ex_rd_write = ex_pipe_rd_write & ex_pipe_valid;
     assign ex_rd_addr = ex_pipe_rd_addr;
-    assign ex_rd_wdata = alu_result;
+    assign ex_rd_wdata = final_alu_result;
 
     // --------------------------------------
     // Module Instantiation

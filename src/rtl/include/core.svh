@@ -34,3 +34,8 @@
 `define BRANCH_OP_LT    1
 `define BRANCH_OP_NEGATE 2
 `define BRANCH_OP_WIDTH 3
+
+// ALU SRC 1 selection
+`define ALU_SRC1_PC     0
+`define ALU_SRC1_ZERO   1
+`define ALU_SRC1_WIDTH  2

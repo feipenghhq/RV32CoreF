@@ -29,7 +29,7 @@ module ID (
     output logic [`XLEN-1:0]            ex_pipe_pc,
     output logic [`XLEN-1:0]            ex_pipe_instruction,
     output logic [`ALU_OP_WIDTH-1:0]    ex_pipe_alu_opcode,
-    output logic                        ex_pipe_alu_src1_sel_pc,
+    output logic [`ALU_SRC1_WIDTH-1:0]  ex_pipe_alu_src1_sel,
     output logic                        ex_pipe_alu_src2_sel_imm,
     output logic                        ex_pipe_branch,
     output logic [`BRANCH_OP_WIDTH-1:0] ex_pipe_branch_opcode,
@@ -78,7 +78,7 @@ module ID (
 
     // From/to decoder
     logic [`ALU_OP_WIDTH-1:0]       dec_alu_opcode;
-    logic                           dec_alu_src1_sel_pc;
+    logic [`ALU_SRC1_WIDTH-1:0]     dec_alu_src1_sel;
     logic                           dec_alu_src2_sel_imm;
     logic                           dec_branch;
     logic [`BRANCH_OP_WIDTH-1:0]    dec_branch_opcode;
@@ -112,7 +112,7 @@ module ID (
 
     // Pipeline Register Update
     always @(posedge clk) begin
-        if      (rst_b)         ex_pipe_valid <= 1'b0;
+        if      (!rst_b)        ex_pipe_valid <= 1'b0;
         else if (ex_pipe_ready) ex_pipe_valid <= id_pipe_req;
     end
 
@@ -120,7 +120,7 @@ module ID (
         ex_pipe_pc <= id_pipe_pc;
         ex_pipe_instruction <= id_pipe_instruction;
         ex_pipe_alu_opcode <= dec_alu_opcode;
-        ex_pipe_alu_src1_sel_pc <= dec_alu_src1_sel_pc;
+        ex_pipe_alu_src1_sel <= dec_alu_src1_sel;
         ex_pipe_alu_src2_sel_imm <= dec_alu_src2_sel_imm;
         ex_pipe_branch <= dec_branch;
         ex_pipe_branch_opcode <= dec_branch_opcode;
