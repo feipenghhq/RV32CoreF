@@ -48,13 +48,17 @@ module IF (
     logic [`XLEN-1:0] instruction;
     logic             instr_valid;
 
+    // PC logic
+    logic [`XLEN-1:0] pc;
+    logic [`XLEN-1:0] next_pc;
+
     // --------------------------------------
     // Pipeline Logic
     // --------------------------------------
 
     // Pipeline Control
     assign if_valid = ~id_pipe_flush;
-    assign if_pipe_done = instr_valid; // FIXME: need to consider iram_addr_ok and iram_data_ok
+    assign if_pipe_done = iram_data_ok; // FIXME: need to consider iram_addr_ok and iram_data_ok being zero cases
     assign if_pipe_req = if_pipe_done & if_valid;
 
     // Pipeline Register Update
@@ -64,18 +68,44 @@ module IF (
     end
 
     always @(posedge clk) begin
-        id_pipe_pc <= pc_val;
-        id_pipe_instruction <= instruction;
+        if (id_pipe_ready) begin
+            id_pipe_pc <= pc_val;
+            id_pipe_instruction <= instruction;
+        end
     end
 
-    // --------------------------------------
-    // Module Instantiation
-    // --------------------------------------
+    // -------------------------------------------
+    // Instruction RAM logic
+    // -------------------------------------------
+    // 1. always read the instruction ram
+    // 2. Assume that the ram is synchronouse ram and data come back at the next clock cycle
+    // 3. We introduce a "Pre IF" stage where we update the PC. We send the read request on
+    // the "Pre IF" stage and the address is next_pc so when data comes back it is in IF stage
+    assign iram_req = 1'b1;
+    assign iram_write = 1'b0;
+    assign iram_wstrb = '0;
+    assign iram_addr = next_pc;
+    assign iram_wdata = '0;
 
-    ifu u_ifu(
-        .branch(ex_branch),
-        .branch_pc(ex_branch_pc),
-        .*
-        );
+    // -------------------------------------------
+    // PC logic
+    // -------------------------------------------
+
+    assign pc_val = pc;
+    assign next_pc = ex_branch ? ex_branch_pc : pc + `XLEN'h4;
+
+    always @(posedge clk) begin
+        if (!rst_b) begin
+            pc <= `PC_RESET_ADDR - 4; // because we use next_pc for ram address, we need to minus 4 here
+        end
+        else if (id_pipe_ready) begin // only update the pc when the instruction is ready to move to next stage
+            pc <= next_pc;
+        end
+    end
+
+    // -------------------------------------------
+    // Instruction logic
+    // -------------------------------------------
+    assign instruction = iram_rdata;
 
 endmodule

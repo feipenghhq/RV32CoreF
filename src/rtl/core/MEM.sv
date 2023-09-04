@@ -51,8 +51,8 @@ module MEM (
     // --------------------------------------
 
     // Pipeline Control
-    logic mem_pipe_done;
-    logic mem_pipe_req;
+    logic mem_done;
+    logic mem_req;
     logic mem_valid;
 
     // Memory Read Control
@@ -79,23 +79,26 @@ module MEM (
 
     // Pipeline Control
     assign mem_valid = mem_pipe_valid & ~wb_pipe_flush;
-    assign mem_pipe_done = ~mem_pipe_mem_read | load_done;
-    assign mem_pipe_ready = ~mem_valid | wb_pipe_ready & mem_pipe_done;
-    assign mem_pipe_req = mem_pipe_done & mem_valid;
+    assign mem_done = ~mem_pipe_mem_read | load_done;
+    assign mem_req = mem_done & mem_valid;
+
+    assign mem_pipe_ready = ~mem_valid | mem_req & wb_pipe_ready;
     assign mem_pipe_flush = wb_pipe_flush;
 
     // Pipeline Register Update
     always @(posedge clk) begin
         if      (!rst_b)        wb_pipe_valid <= 1'b0;
-        else if (wb_pipe_ready) wb_pipe_valid <= mem_pipe_req;
+        else if (wb_pipe_ready) wb_pipe_valid <= mem_req;
     end
 
     always @(posedge clk) begin
-        wb_pipe_pc <= mem_pipe_pc;
-        wb_pipe_instruction <= mem_pipe_instruction;
-        wb_pipe_rd_write <= mem_pipe_rd_write;
-        wb_pipe_rd_addr <= mem_pipe_rd_addr;
-        wb_pipe_rd_data <= rd_data;
+        if (wb_pipe_ready) begin
+            wb_pipe_pc <= mem_pipe_pc;
+            wb_pipe_instruction <= mem_pipe_instruction;
+            wb_pipe_rd_write <= mem_pipe_rd_write;
+            wb_pipe_rd_addr <= mem_pipe_rd_addr;
+            wb_pipe_rd_data <= rd_data;
+        end
     end
 
     // --------------------------------------

@@ -62,9 +62,9 @@ module ID (
     // --------------------------------------
 
     // Pipeline Control
-    logic id_pipe_done;
-    logic id_pipe_req;
     logic id_valid;
+    logic id_done;
+    logic id_req;
 
     // From/to regfile
     logic [`REG_AW-1:0]             dec_rs1_addr;
@@ -99,41 +99,47 @@ module ID (
     logic                           rs2_match_mem;
     logic                           rs2_match_wb;
 
+    // Stall logic
+    logic                           id_depends_on_load;
+
     // --------------------------------------
     // Pipeline Logic
     // --------------------------------------
 
     // Pipeline Control
     assign id_valid = id_pipe_valid & ~ex_pipe_flush;
-    assign id_pipe_done  = 1'b1; // nothing blocking in ID stage for now
-    assign id_pipe_ready = id_pipe_done & ex_pipe_ready;
-    assign id_pipe_req   = id_pipe_done & id_valid;
+    assign id_done  = ~id_depends_on_load;
+    assign id_req   = id_done & id_valid;
+
+    assign id_pipe_ready = ~id_valid | id_req & ex_pipe_ready;
     assign id_pipe_flush = ex_pipe_flush;
 
     // Pipeline Register Update
     always @(posedge clk) begin
         if      (!rst_b)        ex_pipe_valid <= 1'b0;
-        else if (ex_pipe_ready) ex_pipe_valid <= id_pipe_req;
+        else if (ex_pipe_ready) ex_pipe_valid <= id_req;
     end
 
     always @(posedge clk) begin
-        ex_pipe_pc <= id_pipe_pc;
-        ex_pipe_instruction <= id_pipe_instruction;
-        ex_pipe_alu_opcode <= dec_alu_opcode;
-        ex_pipe_alu_src1_sel <= dec_alu_src1_sel;
-        ex_pipe_alu_src2_sel_imm <= dec_alu_src2_sel_imm;
-        ex_pipe_branch <= dec_branch;
-        ex_pipe_branch_opcode <= dec_branch_opcode;
-        ex_pipe_jump <= dec_jump;
-        ex_pipe_rs1_rdata <= rs1_rdata_forwarded;
-        ex_pipe_rs2_rdata <= rs2_rdata_forwarded;
-        ex_pipe_rd_write <= dec_rd_write;
-        ex_pipe_rd_addr <= dec_rd_addr;
-        ex_pipe_mem_read <= dec_mem_read;
-        ex_pipe_mem_write <= dec_mem_write;
-        ex_pipe_mem_opcode <= dec_mem_opcode;
-        ex_pipe_unsign <= dec_unsign;
-        ex_pipe_immediate <= dec_immediate;
+        if (ex_pipe_ready) begin
+            ex_pipe_pc <= id_pipe_pc;
+            ex_pipe_instruction <= id_pipe_instruction;
+            ex_pipe_alu_opcode <= dec_alu_opcode;
+            ex_pipe_alu_src1_sel <= dec_alu_src1_sel;
+            ex_pipe_alu_src2_sel_imm <= dec_alu_src2_sel_imm;
+            ex_pipe_branch <= dec_branch;
+            ex_pipe_branch_opcode <= dec_branch_opcode;
+            ex_pipe_jump <= dec_jump;
+            ex_pipe_rs1_rdata <= rs1_rdata_forwarded;
+            ex_pipe_rs2_rdata <= rs2_rdata_forwarded;
+            ex_pipe_rd_write <= dec_rd_write;
+            ex_pipe_rd_addr <= dec_rd_addr;
+            ex_pipe_mem_read <= dec_mem_read;
+            ex_pipe_mem_write <= dec_mem_write;
+            ex_pipe_mem_opcode <= dec_mem_opcode;
+            ex_pipe_unsign <= dec_unsign;
+            ex_pipe_immediate <= dec_immediate;
+        end
     end
 
     // --------------------------------------
@@ -157,6 +163,16 @@ module ID (
                                  rs2_match_mem ? mem_rd_wdata :
                                  rs2_match_wb ? wb_rd_wdata :
                                  rs2_rdata;
+
+    // --------------------------------------
+    // Stall Logic
+    // --------------------------------------
+    // We need to stall if there is data dependencies on load instructions
+    // because the load data is ready in MEM stage.
+    // If load instruction is waiting in MEM stage, then the MEM stage will
+    // backpressure all the previous stage so no need to have extral stall
+    // logic for this situation.
+    assign id_depends_on_load = ex_pipe_mem_read & ex_pipe_valid & (rs1_match_ex | rs2_match_ex);
 
     // --------------------------------------
     // Module Instantiation

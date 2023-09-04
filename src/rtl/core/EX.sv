@@ -69,8 +69,8 @@ module EX (
     // --------------------------------------
 
     // Pipeline Control
-    logic ex_pipe_done;
-    logic ex_pipe_req;
+    logic ex_done;
+    logic ex_req;
     logic ex_valid;
 
     // From/to ALU
@@ -109,26 +109,29 @@ module EX (
 
     // Pipeline Control
     assign ex_valid = ex_pipe_valid & ~mem_pipe_flush;
-    assign ex_pipe_done = ~dram_req | dram_done;
-    assign ex_pipe_ready = ~ex_valid | mem_pipe_ready & ex_pipe_done;
-    assign ex_pipe_req = ex_pipe_done & ex_valid;
+    assign ex_done = ~dram_req | dram_done;
+    assign ex_req = ex_done & ex_valid;
+
+    assign ex_pipe_ready = ~ex_valid | ex_req & mem_pipe_ready;
     assign ex_pipe_flush = ex_branch | mem_pipe_flush;
 
     // Pipeline Register Update
     always @(posedge clk) begin
         if      (!rst_b)         mem_pipe_valid <= 1'b0;
-        else if (mem_pipe_ready) mem_pipe_valid <= ex_pipe_req;
+        else if (mem_pipe_ready) mem_pipe_valid <= ex_req;
     end
 
     always @(posedge clk) begin
-        mem_pipe_pc <= ex_pipe_pc;
-        mem_pipe_instruction <= ex_pipe_instruction;
-        mem_pipe_mem_opcode <= ex_pipe_mem_opcode;
-        mem_pipe_mem_read <= ex_pipe_mem_read;
-        mem_pipe_unsign <= ex_pipe_unsign;
-        mem_pipe_rd_write <= ex_pipe_rd_write;
-        mem_pipe_rd_addr <= ex_pipe_rd_addr;
-        mem_pipe_alu_result <= final_alu_result;
+        if (mem_pipe_ready) begin
+            mem_pipe_pc <= ex_pipe_pc;
+            mem_pipe_instruction <= ex_pipe_instruction;
+            mem_pipe_mem_opcode <= ex_pipe_mem_opcode;
+            mem_pipe_mem_read <= ex_pipe_mem_read;
+            mem_pipe_unsign <= ex_pipe_unsign;
+            mem_pipe_rd_write <= ex_pipe_rd_write;
+            mem_pipe_rd_addr <= ex_pipe_rd_addr;
+            mem_pipe_alu_result <= final_alu_result;
+        end
     end
 
     // --------------------------------------
