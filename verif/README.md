@@ -59,7 +59,7 @@ make help
 
 This is the riscv test taken from the following repo: <https://github.com/riscv-software-src/riscv-tests>
 
-Modification made on the original repo:
+### Modification made on the original repo
 
 1. File copied from original repo to riscv-tests folder
 
@@ -80,13 +80,11 @@ Modification made on the original repo:
    1. Updated RVTEST_CODE_BEGIN macro
    2. Updated RVTEST_PASS and RVTEST_FAIL macro
 
+   Please check the file itself to see details.
+   
 5. To compile and generate the test case
 
    ```shell
    cd tests/riscv-tests
    make
    ```
-
-   
-
-   

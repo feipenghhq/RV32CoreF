@@ -43,7 +43,7 @@ Assuming data flows from pipeline X to pipeline Y
 
 In ordering to simply the pipeline control,  we use the request/ready handshake protocol between the adjacent pipeline. Status of handshaking signals:
 
-| x_req` | `Y_pipe_ready` | comments                                                                |
+| x_req | Y_pipe_ready | comments                                                                |
 | ------ | -------------- | ----------------------------------------------------------------------- |
 | 0      | 1              | Pipeline Stalled from Y stage                                           |
 | 1      | 1              | Pipeline Stalled from Y stage                                           |
@@ -102,6 +102,48 @@ In order to be able to fetch an instruction on every clock cycle, there 2 potent
 
 **In our CPU architecture, we use solution #2.**
 
+### IF Pipeline Control
+
+Because the instruction RAM may not have the capability of holding its output data and the extra wait state introduced by the bus interface, we need to carefully consider the PreIF/IF and IF/ID pipeline control/handshake for the potential stall request for downstream pipeline stage.
+
+#### Pre-IF/IF Handshake
+
+Considering preif_req and if_pipe_ready, there are 4 possible cases:
+
+| preif_req | if_pipe_ready | Comments                                                                           |
+| --------- | ------------- | ---------------------------------------------------------------------------------- |
+| 0         | 1             | Not fetching any instruction or wait for bus. Nothing to be sent to IF stage.      |
+| 1         | 1             | Memory read request sent, move to IF stage                                         |
+| 0         | 0             | Not fetching any instruction or wait for bus. Nothing to be sent to IF stage.      |
+| 1         | 0             | Memory read request sent, but can't move to IF stage due to IF stage busy/stalled. |
+
+For the 4th cases, there are two potential issues:
+
+1. It can't keep asserting the read request while waiting for the if_pipe_ready signal. Once the memory read request has been taken/completed, it should lower the read request.
+2. If the read data is returned while IF stage is still busy/stalled, then the data can't enter IF stage and it will be lost.
+
+There are two solutions:
+
+1. Only send the memory read request when IF stage is able to accept the data (ready signal is high). This solution is simple but has some performance degradation.
+2. Use an additional register to save the data (instruction) coming back from the instruction memory if IF stage is not able to take it When IF stage is ready, take the data from the register instead of the memory.
+
+We use solution #1 at this point. We will consider implementing solution #2 in the future to increase performance.
+
+#### IF/ID Handshake
+
+Similar to PreIF/IF stage, we have 4 possible cases:
+
+| if_req | id_pipe_ready | Comments                                                                                   |
+| ------ | ------------- | ------------------------------------------------------------------------------------------ |
+| 0      | 1             | Not fetching any instruction or wait for bus. Nothing to be sent to ID stage.              |
+| 1      | 1             | Instruction is ready in IF stage, move to ID stage                                         |
+| 0      | 0             | Not fetching any instruction or wait for bus. Nothing to be sent to ID stage.              |
+| 1      | 0             | Instruction is ready in IF stage, but can't move to ID stage due to ID stage busy/stalled. |
+
+We only have 1 solution here:
+
+Use an additional register to save the data (instruction) coming back from the instruction memory if ID stage is not able to take it When IF stage is ready, take the data from the register instead of the memory.
+
 ## ID stage
 
 ID stage contains instruction decoder (decoder.sv), register file (regfile.sv), forwarding control and stall control.
@@ -127,6 +169,12 @@ The reason of forwarding the data to ID stage is that all the data can be merged
 ### Stall Control
 
 For load instruction, data will be available only in MEM stage. If the instruction that is immediately after the load instruction depends on the load instruction, it won't be able to get the data in ID stage. In this case, we need to stall the pipeline stage and keep the instruction in ID stage till the data is available in MEM stage
+
+### Opens
+
+- To be implemented: invalid instruction exceptions
+
+
 
 ## EX stage
 
@@ -222,9 +270,16 @@ Similar to IF stage, synchronous RAM is used as data ram so we need at least 2 c
 
 **In our CPU design, we use option 1.**
 
+### Opens
+
+- To be implemented: misaligned memory read/write address exception
+- To be implemented: misaligned branch/jump address exception
+
 ## MEM Stage
 
 Data memory read data comes back at memory stage. Memory stage contains the logic to process the memory read data (sign/unsigned extension to XLEN width depending on read type)
+
+Misaligned address load/store is not supported by the hardware.
 
 ## WB Stage
 
@@ -288,52 +343,22 @@ AW: Address width
 
 ![read](assets/core/sram_bus_read.png)
 
-### SRAM Bus impact on IF stage pipeline control
+### SRAM Bus impact on pipeline control
 
-### pre-IF and IF stage pipeline Control
+With introduction of the SRAM bus, we have wait state for address/request and return data. This impacts the pipeline control signal in preIF/IF/EX/MEM stage
 
-With introduction of the SRAM bus (see ![SRAM Bus] session),  we need to consider the pipeline control signal for pre-IF stage and IF stage.
+#### Pre-IF stage
 
-#### pipe_done signal
+- `preif_done` signal: `preif_done` need to consider `addr_ok` signal: `preif_done = req & addr_ok`
 
-- For pre-IF stage, only when the bus accept the request, we are good to go, so `pre-IF_pipe_done = req & addr_ok `
+#### IF stage
 
-- For IF stage, only when the bus return valid data then we can proceed to ID stage so `IF_pipe_done = data_ok`
+- `if_done` signal: `if_done` need to consider `data_ok` signal: `if_done = data_ok`
 
-#### pipe_ready signal
+#### EX stage
 
-##### pre-IF to IF stage
+- `ex_done` signal: `ex_done` need to consider `addr_ok` signal
 
-For pre-IF stage, considering pre-IF_pipe_done and IF_pipe_ready, there are 4 possible situation:
+#### MEM stage
 
-| pre-IF_pipe_done | IF_pipe_ready | Comments                                                                                                                 |
-| ---------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| 0                | 0             | Bus is busy and has not taken the read request. Continue assert the bus request and wait for the bus to take the request |
-| 0                | 1             | Bus is busy and has not taken the read request. Continue assert the bus request and wait for the bus to take the request |
-| 1                | 1             | Bus is ready and take the read request, IF stage is also ready so we can go to IF stage to wait for the data             |
-| 1                | 0             | Bus is ready and take the read request, but IF stage is busy. This is complex case which needs more analysis             |
-
-For the 4th situation, there are 2 potential issues:
-
-1. pre-IF can't assert req signal while waiting for IF_pipe_ready. This is because the data bus has already taken our request, if we assert the request again, then data bus will treat it as a new request. **So if data bus has accepted the request while pre-IF is not able to proceed, DO NOT send the request again in the next cycle.**
-2. What should we do when the data bus returns the data but pre-IF is not able to proceed to IF stage? The data bus only provide the data for one cycle and we will lose the data.
-
-There are two solutions:
-
-1. Use additional register to save the data (instruction) coming back from pre-IF stage if IF stage is not able to take it due to ready signal being 0. When IF stage is ready, take the data from the register
-2. Only send the memory read request when ID stage is able to accept the data (ready signal is high). This solution is simpler with some performance degradation.
-
-We implemented both of the solution in our design. We provide a macro for user to select between the 2 solution: **CORE_PREIF_USE_SHADOW_REGISTER**
-
-##### IF to ID stage
-
-For IF stage, considering IF_pipe_done and ID_pipe_ready, similar to previous one, there are also 4 possible situation.
-
-| IF_pipe_done | ID_pipe_ready | Comments                                                                                               |
-| ------------ | ------------- | ------------------------------------------------------------------------------------------------------ |
-| 0            | 0             | Bus is busy and has not return the data. Continue to wait for the data.                                |
-| 0            | 1             | Bus is busy and has not return the data. Continue to wait for the data.                                |
-| 1            | 1             | Bus is ready and ID stage is able to take the data. We can proceed to ID stage                         |
-| 1            | 0             | Bus is ready and ID stage is not able to take the data. This is complex case which needs more analysis |
-
-For the 4th situation there is only one solution: Use additional register to save the data (instruction) coming back from IF stage if ID stage is not able to take it due to ready signal being 0. When ID stage is ready, take the data from the register.
+- `mem_done` signal: `mem_done` need to consider `data_ok` signal

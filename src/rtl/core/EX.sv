@@ -45,6 +45,7 @@ module EX (
     output logic [`XLEN-1:0]            mem_pipe_instruction,
     output logic [`MEM_OP_WIDTH-1:0]    mem_pipe_mem_opcode,
     output logic                        mem_pipe_mem_read,
+    output logic [1:0]                  mem_pipe_mem_byte_addr, // byte address of the memory request
     output logic                        mem_pipe_unsign,
     output logic                        mem_pipe_rd_write,
     output logic [`REG_AW-1:0]          mem_pipe_rd_addr,
@@ -127,6 +128,7 @@ module EX (
             mem_pipe_instruction <= ex_pipe_instruction;
             mem_pipe_mem_opcode <= ex_pipe_mem_opcode;
             mem_pipe_mem_read <= ex_pipe_mem_read;
+            mem_pipe_mem_byte_addr <= dram_addr[1:0];
             mem_pipe_unsign <= ex_pipe_unsign;
             mem_pipe_rd_write <= ex_pipe_rd_write;
             mem_pipe_rd_addr <= ex_pipe_rd_addr;
@@ -189,8 +191,8 @@ module EX (
                         ({`XLEN{ex_pipe_mem_opcode[`MEM_OP_HALF]}} & {2{ex_pipe_rs2_rdata[15:0]}}) |
                         ({`XLEN{ex_pipe_mem_opcode[`MEM_OP_WORD]}} & ex_pipe_rs2_rdata);
 
-    assign wstrb_byte = 1 << dram_addr[1:0];
-    assign wstrb_half = {~dram_addr[1], ~dram_addr[1], dram_addr[1], dram_addr[1]};
+    assign wstrb_byte = {3'b0, ex_pipe_mem_opcode[`MEM_OP_BYTE]} << dram_addr[1:0];
+    assign wstrb_half = {dram_addr[1], dram_addr[1], ~dram_addr[1], ~dram_addr[1]} & {4{ex_pipe_mem_opcode[`MEM_OP_HALF]}};
     assign wstrb_word = {4{ex_pipe_mem_opcode[`MEM_OP_WORD]}};
     assign dram_wstrb = wstrb_byte | wstrb_half | wstrb_word;
 

@@ -14,6 +14,9 @@
 
 `define RAM_PATH u_minisoc.memory.mem
 `define REG_PATH u_minisoc.u_core.u_id.u_regfile.register
+`define TEST_NUM `REG_PATH[3]
+`define TEST_SIGNATURE_1 `REG_PATH[28]
+`define TEST_SIGNATURE_2 `REG_PATH[29]
 
 module tb();
 
@@ -63,19 +66,17 @@ module tb();
     task check_test;
         logic           pass;
         logic           fail;
-        logic [31:0]    test_num;
         while (1) begin
             #1000; // Check the result every 1000 ns
-            pass = (`REG_PATH[28] == 1) && (`REG_PATH[29] == 1);
-            fail = (`REG_PATH[28] == 1) && (`REG_PATH[29] == 0);
-            test_num = `REG_PATH[3];
+            pass = (`TEST_SIGNATURE_1 == 1) && (`TEST_SIGNATURE_1 == 1);
+            fail = (`TEST_SIGNATURE_1 == 1) && (`TEST_SIGNATURE_2 == 0);
             if (pass) begin
                 $info("TEST RESULT: PASS");
                 #100;
                 $finish;
             end
             else if (fail) begin
-                $fatal(1, "TEST RESULT: FAIL.\nFailed Test Case: %0d", test_num);
+                $fatal(1, "TEST RESULT: FAIL.\nFailed Test Case: %0d", `TEST_NUM);
                 #100;
             end
         end
@@ -83,7 +84,7 @@ module tb();
 
     task test_timeout;
         #10000;
-        $fatal(2, "TEST TIMEOUT");
+        $fatal(2, "TEST TIMEOUT\nLast run test case: %0d", `TEST_NUM);
     endtask
 
     initial begin

@@ -24,6 +24,7 @@ module MEM (
     input  logic [`XLEN-1:0]            mem_pipe_instruction,
     input  logic                        mem_pipe_mem_read,
     input  logic [`MEM_OP_WIDTH-1:0]    mem_pipe_mem_opcode,
+    input  logic [1:0]                  mem_pipe_mem_byte_addr,
     input  logic                        mem_pipe_unsign,
     input  logic                        mem_pipe_rd_write,
     input  logic [`REG_AW-1:0]          mem_pipe_rd_addr,
@@ -116,12 +117,12 @@ module MEM (
     assign lh_ext_data  = {{(`XLEN-16){lh_data[15]}},lh_data};
     assign lhu_ext_data = {{(`XLEN-16){1'b0}},       lh_data};
 
-    assign lb_data = ({8{mem_pipe_rd_addr[1:0] == 0}} & dram_rdata[ 7: 0]) |
-                     ({8{mem_pipe_rd_addr[1:0] == 1}} & dram_rdata[15: 8]) |
-                     ({8{mem_pipe_rd_addr[1:0] == 2}} & dram_rdata[23:16]) |
-                     ({8{mem_pipe_rd_addr[1:0] == 3}} & dram_rdata[31:24]);
+    assign lb_data = ({8{mem_pipe_mem_byte_addr[1:0] == 0}} & dram_rdata[ 7: 0]) |
+                     ({8{mem_pipe_mem_byte_addr[1:0] == 1}} & dram_rdata[15: 8]) |
+                     ({8{mem_pipe_mem_byte_addr[1:0] == 2}} & dram_rdata[23:16]) |
+                     ({8{mem_pipe_mem_byte_addr[1:0] == 3}} & dram_rdata[31:24]);
 
-    assign lh_data = mem_pipe_rd_addr[1] ? dram_rdata[`XLEN-1:16] : dram_rdata[15:0];
+    assign lh_data = mem_pipe_mem_byte_addr[1] ? dram_rdata[31:16] : dram_rdata[15:0];
 
     assign load_data = ({`XLEN{is_lb}}  & lb_ext_data)  |
                        ({`XLEN{is_lbu}} & lbu_ext_data) |

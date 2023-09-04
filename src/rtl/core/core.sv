@@ -77,6 +77,7 @@ module core (
     logic [`XLEN-1:0]               mem_pipe_instruction;
     logic                           mem_pipe_mem_read;
     logic [`MEM_OP_WIDTH-1:0]       mem_pipe_mem_opcode;
+    logic [1:0]                     mem_pipe_mem_byte_addr;
     logic                           mem_pipe_unsign;
     logic                           mem_pipe_rd_write;
     logic [`REG_AW-1:0]             mem_pipe_rd_addr;

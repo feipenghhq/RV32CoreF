@@ -39,9 +39,15 @@ module IF (
     // --------------------------------------
 
     // Pipeline Control
-    logic if_pipe_done;
-    logic if_pipe_req;
+    logic preif_done;
+    logic preif_req;
+    logic preif_valid;
+    logic preif_pipe_valid;
+
+    logic if_done;
+    logic if_req;
     logic if_valid;
+    logic if_pipe_ready;
 
     // From IFU
     logic [`XLEN-1:0] pc_val;
@@ -52,19 +58,35 @@ module IF (
     logic [`XLEN-1:0] pc;
     logic [`XLEN-1:0] next_pc;
 
+    // Instruction logic
+    logic [`XLEN-1:0] if_instruction;       // a register to hold the instruction in IF stage in case of
+                                            // id is not ready
+    logic             if_instruction_valid;
+
     // --------------------------------------
     // Pipeline Logic
     // --------------------------------------
 
     // Pipeline Control
-    assign if_valid = ~id_pipe_flush;
-    assign if_pipe_done = iram_data_ok; // FIXME: need to consider iram_addr_ok and iram_data_ok being zero cases
-    assign if_pipe_req = if_pipe_done & if_valid;
+    assign preif_done = iram_req & iram_addr_ok;
+    assign preif_req = preif_done;
+    assign preif_valid = preif_req; // at the current implementation, preif won't be flushed because we always want to
+                                    // read the next instruction even if we flush other stages.
+
+    always @(posedge clk) begin
+        if (!rst_b) preif_pipe_valid <= 1'b0;
+        else if (if_pipe_ready) preif_pipe_valid <= preif_valid;
+    end
+
+    assign if_valid = preif_pipe_valid & ~id_pipe_flush;
+    assign if_done = iram_data_ok | if_instruction_valid;
+    assign if_req = if_done & if_valid;
+    assign if_pipe_ready = ~if_valid | if_req & id_pipe_ready;
 
     // Pipeline Register Update
     always @(posedge clk) begin
         if      (!rst_b)        id_pipe_valid <= 1'b0;
-        else if (id_pipe_ready) id_pipe_valid <= if_pipe_req & ~id_pipe_flush;
+        else if (id_pipe_ready) id_pipe_valid <= if_req & ~id_pipe_flush;
     end
 
     always @(posedge clk) begin
@@ -81,7 +103,7 @@ module IF (
     // 2. Assume that the ram is synchronouse ram and data come back at the next clock cycle
     // 3. We introduce a "Pre IF" stage where we update the PC. We send the read request on
     // the "Pre IF" stage and the address is next_pc so when data comes back it is in IF stage
-    assign iram_req = 1'b1;
+    assign iram_req = if_pipe_ready;     // we only read the memory when IF stage is ready
     assign iram_write = 1'b0;
     assign iram_wstrb = '0;
     assign iram_addr = next_pc;
@@ -106,6 +128,23 @@ module IF (
     // -------------------------------------------
     // Instruction logic
     // -------------------------------------------
-    assign instruction = iram_rdata;
+
+    // If IF is request to send data to ID but ID is not ready, put the data in if_instruction and set the valid bit
+    // If ID is ready while if_instruction is valid, clear the valid bit and select the data from if_instruction
+    always @(posedge clk) begin
+        if (!rst_b) begin
+            if_instruction_valid <= 1'b0;
+        end
+        else begin
+            if (if_req && !id_pipe_ready) if_instruction_valid <= 1'b1;
+            else if (id_pipe_ready) if_instruction_valid <= 1'b0;
+        end
+    end
+
+    always @(posedge clk) begin
+        if (if_req && !id_pipe_ready) if_instruction <= iram_rdata;
+    end
+
+    assign instruction = if_instruction_valid ? if_instruction : iram_rdata;
 
 endmodule
