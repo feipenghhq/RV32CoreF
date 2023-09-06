@@ -75,16 +75,64 @@ This is the riscv test taken from the following repo: <https://github.com/riscv-
    ```
 
 2. Updated the original Makefile and the Makefrag file in rv32ui folder
-3. Removed all the rv64 related instruction from the rv32ui folder
-4. Modified riscv_test.h
+3. Update the link.ld file.
+4. Removed all the rv64 related instruction from the rv32ui folder
+5. Modified riscv_test.h
    1. Updated RVTEST_CODE_BEGIN macro
    2. Updated RVTEST_PASS and RVTEST_FAIL macro
 
    Please check the file itself to see details.
-   
-5. To compile and generate the test case
+
+6. To compile and generate the test case
 
    ```shell
    cd tests/riscv-tests
    make
    ```
+
+
+
+
+## riscv-arch-tests
+
+This is the riscv arch test taken from the following repo: https://github.com/riscv-non-isa/riscv-arch-test/tree/old-framework-2.x
+
+The main branch used a newer flow involving using other tools/flow so we used the old framework
+
+### Modification made on the original repo
+
+The compile flow in riscv-arch-tests is also complex so we reuse the same compilation flow used in riscv-tests and only copied the tests related files from riscv-arch-tests repo. All the other supporting files are created by ourselves.
+
+1. File copied from original repo to riscv-arch-tests folder
+
+   ```text
+   // Test case and environment
+   riscv-arch-test/riscv-test-suite/rv32i_m -> tests/riscv-arch-test/riscv-test-suite/rv32i_m
+   riscv-arch-test/riscv-test-suite/env/* -> tests/riscv-arch-test
+   riscv-arch-test/riscv-test-env/p/riscv_test.h -> tests/riscv-arch-test/riscv_test.h
+   
+   // Test case
+   ```
+
+2. Added link.ld file. The file is based on link.ld file in riscv-tests
+
+3. Added model_test.h file. The file is based on <https://github.com/riscv-non-isa/riscv-arch-test/blob/old-framework-2.x/riscv-target/rocket/model_test.h>
+
+4. Updated riscv_test.h
+
+   ```
+   #include "../encoding.h" => #include "encoding.h"
+   ```
+
+   
+
+5. Added a Makefile to compile and generate verilog dump. The Makefile is based on riscv-tests
+6. To compile and generate the test case
+
+```shell
+cd tests/riscv-tests
+make
+```
+
+
+
