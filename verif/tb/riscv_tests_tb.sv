@@ -23,11 +23,13 @@ module tb();
     logic       clk;
     logic       rst_b;
     logic [7:0] GPIO;
+    string      test_name;
 
     // ------------------------------
     // DUT
     // ------------------------------
-    minisoc u_minisoc (.*);
+    localparam RAM_AW = 12;
+    minisoc #(RAM_AW) u_minisoc (.*);
 
     // ------------------------------
     // Drive clock and reset
@@ -71,12 +73,12 @@ module tb();
             pass = (`TEST_SIGNATURE_1 == 1) && (`TEST_SIGNATURE_1 == 1);
             fail = (`TEST_SIGNATURE_1 == 1) && (`TEST_SIGNATURE_2 == 0);
             if (pass) begin
-                $info("TEST RESULT: PASS");
+                $info("TEST RESULT: PASS. TEST NAME: %s", test_name);
                 #100;
                 $finish;
             end
             else if (fail) begin
-                $fatal(1, "TEST RESULT: FAIL.\nFailed Test Case: %0d", `TEST_NUM);
+                $fatal(1, "TEST RESULT: FAIL. TEST NAME: %s\nFailed Test Case: %0d", test_name, `TEST_NUM);
                 #100;
             end
         end
@@ -84,7 +86,7 @@ module tb();
 
     task test_timeout;
         #10000;
-        $fatal(2, "TEST TIMEOUT\nLast run test case: %0d", `TEST_NUM);
+        $fatal(2, "TEST TIMEOUT. TEST NAME: %s\nLast run test case: %0d", test_name, `TEST_NUM);
     endtask
 
     initial begin
@@ -92,6 +94,10 @@ module tb();
             $dumpfile("dump.vcd");
             $dumpvars(0,tb);
         end
+    end
+
+    initial begin
+        if ($value$plusargs("TEST_NAME=%s", test_name));
     end
 
 endmodule

@@ -24,6 +24,7 @@ make compile_<test_suite>
 
 # Supported test suite
 make compile_riscv_tests
+make compile_riscv_arch_tests
 ```
 
 To run all the tests in test suite
@@ -33,6 +34,7 @@ make run_<test_suite>
  
 # Supported test suite
 make run_riscv_tests
+make run_riscv_arch_tests
 ```
 
 To run a specific test case
@@ -41,10 +43,10 @@ To run a specific test case
 make <test_name>
 
 # For example
-make rv32ui-p-xor.verilog
+make rv32ui-p-xor
 
 # To dump the waveform
-make rv32ui-p-xor.verilog WAVE=1
+make rv32ui-p-xor WAVE=1
 ```
 
 To see the manual for the makefile

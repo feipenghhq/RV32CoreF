@@ -16,7 +16,9 @@
 
 `include "config.svh"
 
-module minisoc (
+module minisoc #(
+    parameter RAM_AW = 12
+)(
     input       clk,
     input       rst_b,
     inout [7:0] GPIO
@@ -50,7 +52,7 @@ module minisoc (
     logic                data_req;
     logic                data_write;
     logic [`XLEN/8-1:0]  data_wstrb;
-    logic [15:0]         data_addr;
+    logic [`XLEN-1:0]    data_addr;
     logic [`XLEN-1:0]    data_wdata;
     logic                data_addr_ok;
     logic                data_data_ok;
@@ -60,7 +62,7 @@ module minisoc (
     logic                gpio_req;
     logic                gpio_write;
     logic [`XLEN/8-1:0]  gpio_wstrb;
-    logic [15:0]         gpio_addr;
+    logic [`XLEN-1:0]    gpio_addr;
     logic [`XLEN-1:0]    gpio_wdata;
     logic                gpio_addr_ok;
     logic                gpio_data_ok;
@@ -79,13 +81,13 @@ module minisoc (
     assign gpio_req   = dram_req & decode_is_gpio;
     assign gpio_write = dram_write;
     assign gpio_wstrb = dram_wstrb;
-    assign gpio_addr  = dram_addr[15:0];
+    assign gpio_addr  = dram_addr;
     assign gpio_wdata = dram_wdata;
 
     assign data_req   = dram_req & decode_is_dram;
     assign data_write = dram_write;
     assign data_wstrb = dram_wstrb;
-    assign data_addr  = dram_addr[15:0];
+    assign data_addr  = dram_addr;
     assign data_wdata = dram_wdata;
 
     assign dram_addr_ok = (decode_is_gpio & gpio_addr_ok) | (decode_is_dram & data_addr_ok);
@@ -102,15 +104,17 @@ module minisoc (
 
     core u_core (.*);
 
+    parameter RAM_AW_INT = RAM_AW - 2; // address in terms of word address
+
     // create a 4KB RAM to hold both the instruction and data
-    ram  #(.AW(10), .DW(`XLEN))
+    ram  #(.AW(RAM_AW_INT), .DW(`XLEN))
     memory
     (
         .clk(clk),
         .instr_req(iram_req),
         .instr_write(iram_write),
         .instr_wstrb(iram_wstrb),
-        .instr_addr(iram_addr[11:2]),
+        .instr_addr(iram_addr[RAM_AW-1:2]),
         .instr_wdata(iram_wdata),
         .instr_addr_ok(iram_addr_ok),
         .instr_data_ok(iram_data_ok),
@@ -118,7 +122,7 @@ module minisoc (
         .data_req(data_req),
         .data_write(data_write),
         .data_wstrb(data_wstrb),
-        .data_addr(data_addr[11:2]),
+        .data_addr(data_addr[RAM_AW-1:2]),
         .data_wdata(data_wdata),
         .data_addr_ok(data_addr_ok),
         .data_data_ok(data_data_ok),

@@ -23,7 +23,7 @@
 import sys
 
 INPUT = sys.argv[1]
-MEMSIZE = int(sys.argv[2])
+MEMSIZE = int(eval(sys.argv[2]))
 OUTPUT = "memory.data"
 WORDSIZE = 4
 MEM = ['00000000' for _ in range(MEMSIZE)]
@@ -49,6 +49,6 @@ with open(INPUT, "r") as f:
 
 # print out the memory.data file
 with open(OUTPUT, "w") as f:
-    for data in MEM:
+    for data in MEM[0:idx]:
         f.write(data)
         f.write("\n")
