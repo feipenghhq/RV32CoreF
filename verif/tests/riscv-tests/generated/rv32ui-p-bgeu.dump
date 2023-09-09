@@ -298,7 +298,7 @@ Disassembly of section .text.init:
 
 000003d0 <fail>:
  3d0:	00100e13          	li	t3,1
- 3d4:	00000e93          	li	t4,0
+ 3d4:	00200e93          	li	t4,2
 
 000003d8 <fail_loop>:
  3d8:	0000006f          	j	3d8 <fail_loop>

@@ -120,7 +120,7 @@ Disassembly of section .text.init:
 
 00000170 <fail>:
  170:	00100e13          	li	t3,1
- 174:	00000e93          	li	t4,0
+ 174:	00200e93          	li	t4,2
 
 00000178 <fail_loop>:
  178:	0000006f          	j	178 <fail_loop>

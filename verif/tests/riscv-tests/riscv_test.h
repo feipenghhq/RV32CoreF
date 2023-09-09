@@ -267,7 +267,7 @@ pass_loop:                                                              \
 #define TESTNUM gp
 #define RVTEST_FAIL                                                     \
         li x28, 1;                                                      \
-        li x29, 0;                                                      \
+        li x29, 2;                                                      \
 fail_loop:                                                              \
         j fail_loop
 

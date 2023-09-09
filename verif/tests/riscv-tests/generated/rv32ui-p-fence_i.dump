@@ -83,7 +83,7 @@ Disassembly of section .text.init:
 
 0000011c <fail>:
  11c:	00100e13          	li	t3,1
- 120:	00000e93          	li	t4,0
+ 120:	00200e93          	li	t4,2
 
 00000124 <fail_loop>:
  124:	0000006f          	j	124 <fail_loop>

@@ -396,7 +396,7 @@ Disassembly of section .text.init:
 
 00000540 <fail>:
  540:	00100e13          	li	t3,1
- 544:	00000e93          	li	t4,0
+ 544:	00200e93          	li	t4,2
 
 00000548 <fail_loop>:
  548:	0000006f          	j	548 <fail_loop>
