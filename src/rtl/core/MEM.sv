@@ -42,6 +42,7 @@ module MEM (
     output logic                        mem_rd_write,
     output logic [`REG_AW-1:0]          mem_rd_addr,
     output logic [`XLEN-1:0]            mem_rd_wdata,
+    output logic                        mem_mem_read_wait,
     // Data RAM Access
     input  logic                        dram_data_ok,
     input  logic [`XLEN-1:0]            dram_rdata
@@ -143,5 +144,6 @@ module MEM (
     assign mem_rd_write = mem_pipe_rd_write & mem_pipe_valid;
     assign mem_rd_addr = mem_pipe_rd_addr;
     assign mem_rd_wdata = rd_data;
+    assign mem_mem_read_wait = mem_pipe_mem_read & ~dram_data_ok;
 
 endmodule

@@ -144,6 +144,26 @@ We only have 1 solution here:
 
 Use an additional register to save the data (instruction) coming back from the instruction memory if ID stage is not able to take it When IF stage is ready, take the data from the register instead of the memory.
 
+#### Flushing affecting addr_ok/data_ok
+
+Considering different status of addr_ok and data_ok when IF is flushed
+
+When IF stage has a valid instruction (meaning the read request has already been accepted in pre-IF stage and IF_pipe_valid = 1),
+
+1. data_ok = 1: The data is just ready at the same cycle with flushing request.
+
+   => Flushing this data. We just need to set IF_valid to zero.
+
+2. data_ok = 0: IF stage is still waiting for the data.
+
+   => We should discard this data when it is returned. Here we will need an extra register to store this information.
+
+When pre IF stage has a request going to memory, in our bus protocol, we allow changing the request as long as it is not being accepted. So we can lower  the request or change the address.
+
+
+
+
+
 ## ID stage
 
 ID stage contains instruction decoder (decoder.sv), register file (regfile.sv), forwarding control and stall control.
@@ -168,7 +188,32 @@ The reason of forwarding the data to ID stage is that all the data can be merged
 
 ### Stall Control
 
-For load instruction, data will be available only in MEM stage. If the instruction that is immediately after the load instruction depends on the load instruction, it won't be able to get the data in ID stage. In this case, we need to stall the pipeline stage and keep the instruction in ID stage till the data is available in MEM stage
+For load instruction, data will be available only in MEM stage. If the instruction that is immediately after the load instruction depends on the load instruction, it won't be able to get the data in ID stage. In this case, we need to stall the pipeline stage and keep the instruction in ID stage till the data is available in MEM stage.
+
+### ID pipeline Control
+
+#### ID stage control corner case
+
+1. Flushing and stall simultaneously in ID stage. Considering the following instruction sequence:
+
+   ```text
+    ID  |  EX  | MEM  
+    ADD |  BEQ | LW
+   
+   *ADD depends on LW instruction and BEQ is taken
+   ```
+
+   Due to the data dependency, ADD will requesting stalling the ID (and IF) stage and due to the taken BEQ, ID is flushed.
+
+   Flush should invalidate ADD and hence canceling the stall request.
+
+   This is taken cared by our logic: 
+
+   ```verilog
+   assign id_pipe_ready = ~id_valid | id_req & ex_pipe_ready;
+   ```
+
+   When ID is flushed, `id_valid = 0` => `~id_valid = 1` => `id_pipe_ready = 1` and won't be stalled.
 
 ### Opens
 

@@ -103,6 +103,7 @@ module core (
     logic                           mem_rd_write;
     logic [`REG_AW-1:0]             mem_rd_addr;
     logic [`XLEN-1:0]               mem_rd_wdata;
+    logic                           mem_mem_read_wait;
     // From WB stage
     logic                           wb_rd_write;
     logic [`XLEN-1:0]               wb_rd_wdata;

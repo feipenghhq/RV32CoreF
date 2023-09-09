@@ -70,8 +70,8 @@ module tb();
         logic           fail;
         while (1) begin
             #1000; // Check the result every 1000 ns
-            pass = (`TEST_SIGNATURE_1 == 1) && (`TEST_SIGNATURE_1 == 1);
-            fail = (`TEST_SIGNATURE_1 == 1) && (`TEST_SIGNATURE_2 == 0);
+            pass = (`TEST_SIGNATURE_1 == 1) && (`TEST_SIGNATURE_2 == 1);
+            fail = (`TEST_SIGNATURE_1 == 1) && (`TEST_SIGNATURE_2 == 2);
             if (pass) begin
                 $info("TEST RESULT: PASS. TEST NAME: %s", test_name);
                 #100;
@@ -85,7 +85,7 @@ module tb();
     endtask
 
     task test_timeout;
-        #10000;
+        #40000;
         $fatal(2, "TEST TIMEOUT. TEST NAME: %s\nLast run test case: %0d", test_name, `TEST_NUM);
     endtask
 
@@ -93,6 +93,8 @@ module tb();
         if ($test$plusargs("DUMP")) begin
             $dumpfile("dump.vcd");
             $dumpvars(0,tb);
+            $dumpvars(0,`TEST_SIGNATURE_1);
+            $dumpvars(0,`TEST_SIGNATURE_2);
         end
     end
 

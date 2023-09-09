@@ -23,6 +23,9 @@ include $(REPO)/src/rtl/rtl.mk
 
 IVERILOG_OPTIONS := -g2005-sv
 
+IVERILOG_PLUSARG = + DRAM_RANDOM_DATA_OK +DRAM_RANDOM_ADDR_OK +IRAM_RANDOM_DATA_OK
+
+
 ifeq ($(WAVE),1)
 	DUMP := DUMP
 endif
@@ -64,7 +67,7 @@ $$($(1)):
 ifeq ($(1), riscv_arch_test)
 	@ln -s `find ./tests/riscv-arch-test -name $$@.reference_output` golden.reference_output
 endif
-	@vvp $(OUTPUT)/run_$(1) +$(DUMP) +TEST_NAME=$$@ | tee -a $(OUTPUT)/$(1).log
+	@vvp $(OUTPUT)/run_$(1) +$(DUMP) +TEST_NAME=$$@ $(IVERILOG_PLUSARG) | tee -a $(OUTPUT)/$(1).log
 endef
 
 # function for print out summary
@@ -104,7 +107,7 @@ show_riscv_arch_test:
 	@echo $(RISCV_ARCH_TEST_TEST)
 
 $(OUTPUT):
-	mkdir $(OUTPUT)
+	@mkdir $(OUTPUT)
 
 #--------------------------------------------------------------------
 # all tests

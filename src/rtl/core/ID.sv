@@ -51,6 +51,7 @@ module ID (
     input  logic                        mem_rd_write,
     input  logic [`REG_AW-1:0]          mem_rd_addr,
     input  logic [`XLEN-1:0]            mem_rd_wdata,
+    input  logic                        mem_mem_read_wait,
     // EX --> ID
     input  logic                        ex_rd_write,
     input  logic [`REG_AW-1:0]          ex_rd_addr,
@@ -168,11 +169,12 @@ module ID (
     // Stall Logic
     // --------------------------------------
     // We need to stall if there is data dependencies on load instructions
-    // because the load data is ready in MEM stage.
-    // If load instruction is waiting in MEM stage, then the MEM stage will
-    // backpressure all the previous stage so no need to have extral stall
-    // logic for this situation.
-    assign id_depends_on_load = ex_pipe_mem_read & ex_pipe_valid & (rs1_match_ex | rs2_match_ex);
+    // We need to wait until the read data is available in MEM stage
+    // We need to stall if:
+    //     1). ID stage depeneds on the Load instruction in EX stage
+    //     2). ID stage depeneds on the Load instruction in MEM stage and the read data is not available yet
+    assign id_depends_on_load = ex_pipe_mem_read & ex_pipe_valid & (rs1_match_ex | rs2_match_ex) |
+                                mem_mem_read_wait & (rs1_match_mem | rs2_match_mem);
 
     // --------------------------------------
     // Module Instantiation

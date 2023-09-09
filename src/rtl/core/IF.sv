@@ -58,10 +58,11 @@ module IF (
     logic [`XLEN-1:0] pc;
     logic [`XLEN-1:0] next_pc;
 
-    // Instruction logic
-    logic [`XLEN-1:0] if_instruction;       // a register to hold the instruction in IF stage in case of
-                                            // id is not ready
-    logic             if_instruction_valid;
+    // glue due to pipeline stall/flush
+    logic [`XLEN-1:0] backup_instruction;       // a register to hold the instruction in IF stage in case of id is not ready
+    logic load_backup_instructions;
+    logic backup_instruction_valid;
+    logic flush_next_data;
 
     // --------------------------------------
     // Pipeline Logic
@@ -79,7 +80,7 @@ module IF (
     end
 
     assign if_valid = preif_pipe_valid & ~id_pipe_flush;
-    assign if_done = iram_data_ok | if_instruction_valid;
+    assign if_done = iram_data_ok | backup_instruction_valid;
     assign if_req = if_done & if_valid;
     assign if_pipe_ready = ~if_valid | if_req & id_pipe_ready;
 
@@ -103,7 +104,7 @@ module IF (
     // 2. Assume that the ram is synchronouse ram and data come back at the next clock cycle
     // 3. We introduce a "Pre IF" stage where we update the PC. We send the read request on
     // the "Pre IF" stage and the address is next_pc so when data comes back it is in IF stage
-    assign iram_req = if_pipe_ready;     // we only read the memory when IF stage is ready
+    assign iram_req = if_pipe_ready & rst_b;     // we only read the memory when IF stage is ready
     assign iram_write = 1'b0;
     assign iram_wstrb = '0;
     assign iram_addr = next_pc;
@@ -120,7 +121,7 @@ module IF (
         if (!rst_b) begin
             pc <= `PC_RESET_ADDR - 4; // because we use next_pc for ram address, we need to minus 4 here
         end
-        else if (id_pipe_ready) begin // only update the pc when the instruction is ready to move to next stage
+        else if (if_pipe_ready) begin // only update the pc when the instruction is ready to move to next stage
             pc <= next_pc;
         end
     end
@@ -129,22 +130,34 @@ module IF (
     // Instruction logic
     // -------------------------------------------
 
-    // If IF is request to send data to ID but ID is not ready, put the data in if_instruction and set the valid bit
-    // If ID is ready while if_instruction is valid, clear the valid bit and select the data from if_instruction
+    // If IF is request to send data to ID but ID is not ready, put the data in backup_instruction and set the valid bit
+    // If ID is ready while backup_instruction is valid, clear the valid bit and select the data from backup_instruction
+
+    assign load_backup_instructions = if_req & ~id_pipe_ready & ~backup_instruction_valid;
+
     always @(posedge clk) begin
-        if (!rst_b) begin
-            if_instruction_valid <= 1'b0;
-        end
+        if (!rst_b) backup_instruction_valid <= 1'b0;
         else begin
-            if (if_req && !id_pipe_ready) if_instruction_valid <= 1'b1;
-            else if (id_pipe_ready) if_instruction_valid <= 1'b0;
+            if (load_backup_instructions) backup_instruction_valid <= 1'b1;
+            else if (id_pipe_ready) backup_instruction_valid <= 1'b0;
         end
     end
 
     always @(posedge clk) begin
-        if (if_req && !id_pipe_ready) if_instruction <= iram_rdata;
+        if (load_backup_instructions) backup_instruction <= iram_rdata;
     end
 
-    assign instruction = if_instruction_valid ? if_instruction : iram_rdata;
+    assign instruction = backup_instruction_valid ? backup_instruction : iram_rdata;
+
+    // If ID is flushed whil we are waiting for data, store this information in a register so when the data is available
+    // we can flush it
+    always @(posedge clk) begin
+        if (!rst_b) flush_next_data <= 1'b0;
+        else begin
+            if (preif_pipe_valid && !iram_data_ok && id_pipe_flush) flush_next_data <= 1'b1;
+            else if (flush_next_data & iram_data_ok) flush_next_data <= 1'b0;
+        end
+    end
+
 
 endmodule

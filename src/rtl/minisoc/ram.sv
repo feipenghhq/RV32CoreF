@@ -10,6 +10,8 @@
  * ------------------------------------------------------------------------------------------------
  */
 
+`timescale 1ns/10ps
+
 module ram #(
     parameter AW = 12,  // address width
     parameter DW = 32   // data width
@@ -41,20 +43,59 @@ module ram #(
 
     reg [DW-1:0] mem[0:DEPTH-1];
 
+    // ---------------------------------------------
     // address ports
-    always @(posedge clk) begin
-        instr_data_ok <= instr_req & ~instr_write;
-        // Note: we need to use the word address instead of the byte address to index into the memory
-        // becasue we access the entire word from the memory. Same for other logic
-        instr_rdata <= mem[instr_addr[AW-1:0]];
+    // ---------------------------------------------
+
+    initial begin
+        instr_data_ok = 1'b0;
+        instr_addr_ok = 1'b0;
     end
 
-    assign instr_addr_ok = 1'b1; // always accept request
-
-    // data ports
+    // Create 1 cycle delay for data_ok signal, can't make this randomized at this point so using
+    // fixed delay
     always @(posedge clk) begin
-        data_data_ok <= data_req & ~data_write;
-        data_rdata <= mem[data_addr[AW-1:0]];
+        if ($test$plusargs("IRAM_RANDOM_DATA_OK")) begin
+            instr_rdata <= #10ns mem[instr_addr];
+            instr_data_ok <= #10ns instr_req & ~instr_write & instr_addr_ok;
+        end
+        else begin
+            instr_rdata <= mem[instr_addr];
+            instr_data_ok <= instr_req & ~instr_write & instr_addr_ok;
+        end
+    end
+
+    always @(instr_req) begin
+        // create 0 ~ 2 clock delay for addr_ok
+        if ($test$plusargs("IRAM_RANDOM_ADDR_OK")) begin
+            instr_addr_ok = 1'b0;
+            if (instr_req) begin
+                repeat ($urandom_range(3)) @(posedge clk);
+                #0 instr_addr_ok = 1'b1;
+            end
+        end
+        else begin
+            instr_addr_ok = 1'b1;
+        end
+    end
+
+    //assign instr_addr_ok = 1'b1; // always accept request
+
+    // ---------------------------------------------
+    // data ports
+    // ---------------------------------------------
+
+    // Create 1 cycle delay for data_ok signal, can't make this randomized at this point so using
+    // fixed delay
+    always @(posedge clk) begin
+        if ($test$plusargs("DRAM_RANDOM_DATA_OK")) begin
+            data_rdata <= #10ns mem[data_addr];
+            data_data_ok <= #10ns data_req & ~data_write & data_addr_ok;
+        end
+        else begin
+            data_rdata <= mem[data_addr];
+            data_data_ok <= data_req & ~data_write & data_addr_ok;
+        end
     end
 
     genvar j;
@@ -67,6 +108,28 @@ module ram #(
         end
     endgenerate
 
-    assign data_addr_ok = 1'b1; // always accept request
+    always @(data_req) begin
+        // create 0 ~ 2 clock delay for addr_ok
+        if ($test$plusargs("DRAM_RANDOM_ADDR_OK")) begin
+            data_addr_ok = 1'b0;
+            if (data_req) begin
+                repeat ($urandom_range(3)) @(posedge clk);
+                #0 data_addr_ok = 1'b1;
+            end
+        end
+        else begin
+            data_addr_ok = 1'b1;
+        end
+    end
+
+
+
+    // --------------------------------------
+    //  Report plusargs
+    // --------------------------------------
+    initial begin
+        if ($test$plusargs("DRAM_RANDOM_ADDR_OK")) $info("Running with plusargs: DRAM_RANDOM_ADDR_OK");
+        if ($test$plusargs("DRAM_RANDOM_DATA_OK")) $info("Running with plusargs: DRAM_RANDOM_DATA_OK");
+    end
 
 endmodule
