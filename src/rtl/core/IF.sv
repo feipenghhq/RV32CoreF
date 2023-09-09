@@ -57,6 +57,7 @@ module IF (
     // PC logic
     logic [`XLEN-1:0] pc;
     logic [`XLEN-1:0] next_pc;
+    logic [`XLEN-1:0] branch_pc_minus4;
 
     // glue due to pipeline stall/flush
     logic [`XLEN-1:0] backup_instruction;       // a register to hold the instruction in IF stage in case of id is not ready
@@ -80,7 +81,7 @@ module IF (
     end
 
     assign if_valid = preif_pipe_valid & ~id_pipe_flush;
-    assign if_done = iram_data_ok | backup_instruction_valid;
+    assign if_done = (iram_data_ok & ~flush_next_data) | backup_instruction_valid;
     assign if_req = if_done & if_valid;
     assign if_pipe_ready = ~if_valid | if_req & id_pipe_ready;
 
@@ -91,7 +92,7 @@ module IF (
     end
 
     always @(posedge clk) begin
-        if (id_pipe_ready) begin
+        if (id_pipe_ready & if_req) begin
             id_pipe_pc <= pc_val;
             id_pipe_instruction <= instruction;
         end
@@ -116,13 +117,25 @@ module IF (
 
     assign pc_val = pc;
     assign next_pc = ex_branch ? ex_branch_pc : pc + `XLEN'h4;
+    assign branch_pc_minus4 = ex_branch_pc - `XLEN'h4;
 
     always @(posedge clk) begin
         if (!rst_b) begin
-            pc <= `PC_RESET_ADDR - 4; // because we use next_pc for ram address, we need to minus 4 here
+            // because we use next_pc for ram address, we need to minus 4 here
+            pc <= `PC_RESET_ADDR - 4;
         end
-        else if (if_pipe_ready) begin // only update the pc when the instruction is ready to move to next stage
-            pc <= next_pc;
+        else begin
+            // update pc to nextPC value when the memory read request is taken and can be moved to next stage
+            if (preif_done && if_pipe_ready) pc <= next_pc;
+
+            // If the addr_ok is not valid at the same cycle when the branch request comes,
+            // then the request to fetch from the new address will not need to wait and the
+            // targetPC (new address to the memory) will be lost because branch instruction is only valid for 1 cycle.
+            // One solution is to update the PC register to TargetPC - 4 instead of TargetPC so the nextPC will
+            // still be target PC in this case.
+            // This is acceptable because the IF stage will not be valid until the read request is accepted.
+            // Once the request is accepted then PC becomes TargetPC and IF stage becomes valid in the next cycle.
+            else if (ex_branch && !preif_done) pc <= branch_pc_minus4;
         end
     end
 
@@ -130,6 +143,7 @@ module IF (
     // Instruction logic
     // -------------------------------------------
 
+    // Instruction Backup
     // If IF is request to send data to ID but ID is not ready, put the data in backup_instruction and set the valid bit
     // If ID is ready while backup_instruction is valid, clear the valid bit and select the data from backup_instruction
 
@@ -149,8 +163,10 @@ module IF (
 
     assign instruction = backup_instruction_valid ? backup_instruction : iram_rdata;
 
+    // Instruction Flushing
     // If ID is flushed whil we are waiting for data, store this information in a register so when the data is available
     // we can flush it
+
     always @(posedge clk) begin
         if (!rst_b) flush_next_data <= 1'b0;
         else begin
@@ -159,5 +175,47 @@ module IF (
         end
     end
 
+
+    // -------------------------------------------
+    // Assertion
+    // -------------------------------------------
+
+
+    // -------------------------------------------
+    // Coverage
+    // -------------------------------------------
+
+    `ifdef COVERAGE
+
+    // Cover the case that IF is requesting to send data to ID but ID is not ready
+    // This will involve using the backup isntruction register
+    property if_req_id_not_ready;
+        @(posedge clk) disable iff(!rst_b)
+        $rose(if_req && ~id_pipe_flush) |-> !id_pipe_ready;
+    endproperty
+    cov_if_req_id_not_ready: cover property(if_req_id_not_ready);
+
+    // Cover the case that the instruction read is accepted for the new branch target
+    property branch_addr_ok;
+        @(posedge clk) disable iff(!rst_b)
+        $rose(ex_branch) |-> iram_addr_ok;
+    endproperty
+    cov_branch_addr_ok: cover property(branch_addr_ok);
+
+    // Cover the case that the instruction read is waiting for the new branch target
+    property branch_wait_addr_ok;
+        @(posedge clk) disable iff(!rst_b)
+        $rose(ex_branch) |-> !iram_addr_ok;
+    endproperty
+    cov_branch_wait_addr_ok: cover property(branch_wait_addr_ok);
+
+    // Cover the case that IF is waiting for a pending read data while a branch request comes
+    property branch_while_waiting_data;
+        @(posedge clk) disable iff(!rst_b)
+        $rose(ex_branch) |-> (preif_pipe_valid && !iram_data_ok);
+    endproperty
+    cov_branch_while_waiting_data: cover property(branch_while_waiting_data);
+
+    `endif
 
 endmodule

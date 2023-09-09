@@ -122,7 +122,7 @@ module ID (
     end
 
     always @(posedge clk) begin
-        if (ex_pipe_ready) begin
+        if (ex_pipe_ready & id_req) begin
             ex_pipe_pc <= id_pipe_pc;
             ex_pipe_instruction <= id_pipe_instruction;
             ex_pipe_alu_opcode <= dec_alu_opcode;

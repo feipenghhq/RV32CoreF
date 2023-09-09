@@ -144,7 +144,7 @@ We only have 1 solution here:
 
 Use an additional register to save the data (instruction) coming back from the instruction memory if ID stage is not able to take it When IF stage is ready, take the data from the register instead of the memory.
 
-#### Flushing affecting addr_ok/data_ok
+#### Flushing and addr_ok/data_ok
 
 Considering different status of addr_ok and data_ok when IF is flushed
 
@@ -160,9 +160,19 @@ When IF stage has a valid instruction (meaning the read request has already been
 
 When pre IF stage has a request going to memory, in our bus protocol, we allow changing the request as long as it is not being accepted. So we can lower  the request or change the address.
 
+#### Branch and addr_ok
 
+A branch request from EX stage will change the next PC value and interfere with the current instruction fetching by changing the address in pre IF stage.
 
+If the addr_ok is not valid at the same cycle when the branch request comes, then the request to fetch from the new address will not need to wait and the targetPC (new address to the memory) will be lost because branch instruction is only valid for 1 cycle from EX stage.
 
+One solution is to update the PC register to TargetPC - 4 instead of TargetPC so the nextPC will still be target PC in this case. 
+
+This is acceptable because the IF stage will not be valid until the read request is accepted. Once the request is accepted then PC becomes TargetPC and IF stage becomes valid in the next cycle. Everything goes back to normal.
+
+However, this might have some negative impact on debug because the temporary TargetPC - 4 value stored in PC register might be confusing but any way the stage is not valid in this case.
+
+By the way, when branch happens, IF and ID stages are flushed so there is no back pressure to pre IF stage so as long as the addr_ok is set, it can be moved to IF stage.
 
 ## ID stage
 
@@ -205,9 +215,7 @@ For load instruction, data will be available only in MEM stage. If the instructi
 
    Due to the data dependency, ADD will requesting stalling the ID (and IF) stage and due to the taken BEQ, ID is flushed.
 
-   Flush should invalidate ADD and hence canceling the stall request.
-
-   This is taken cared by our logic: 
+   Flush should invalidate ADD and hence canceling the stall request. This is taken cared by our logic: 
 
    ```verilog
    assign id_pipe_ready = ~id_valid | id_req & ex_pipe_ready;

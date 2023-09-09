@@ -122,14 +122,4 @@ module ram #(
         end
     end
 
-
-
-    // --------------------------------------
-    //  Report plusargs
-    // --------------------------------------
-    initial begin
-        if ($test$plusargs("DRAM_RANDOM_ADDR_OK")) $info("Running with plusargs: DRAM_RANDOM_ADDR_OK");
-        if ($test$plusargs("DRAM_RANDOM_DATA_OK")) $info("Running with plusargs: DRAM_RANDOM_DATA_OK");
-    end
-
 endmodule

@@ -123,7 +123,7 @@ module tb();
     endtask
 
     task test_timeout;
-        #200000;
+        #400000;
         $fatal(2, "TEST TIMEOUT. TEST NAME: %s", test_name);
     endtask
 

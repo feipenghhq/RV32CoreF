@@ -123,7 +123,7 @@ module EX (
     end
 
     always @(posedge clk) begin
-        if (mem_pipe_ready) begin
+        if (mem_pipe_ready & ex_req) begin
             mem_pipe_pc <= ex_pipe_pc;
             mem_pipe_instruction <= ex_pipe_instruction;
             mem_pipe_mem_opcode <= ex_pipe_mem_opcode;

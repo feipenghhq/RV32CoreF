@@ -94,7 +94,7 @@ module MEM (
     end
 
     always @(posedge clk) begin
-        if (wb_pipe_ready) begin
+        if (wb_pipe_ready & mem_req) begin
             wb_pipe_pc <= mem_pipe_pc;
             wb_pipe_instruction <= mem_pipe_instruction;
             wb_pipe_rd_write <= mem_pipe_rd_write;
