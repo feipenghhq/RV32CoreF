@@ -25,8 +25,8 @@ module gpio #(
     input  logic [DW/8-1:0]     gpio_wstrb, // not used
     input  logic [AW-1:0]       gpio_addr,
     input  logic [DW-1:0]       gpio_wdata,
-    output logic                gpio_addr_ok,
-    output logic                gpio_data_ok,
+    output logic                gpio_ready,
+    output logic                gpio_rvalid,
     output logic [DW-1:0]       gpio_rdata,
     // GPIO
     inout  [WIDTH-1:0]          GPIO
@@ -40,11 +40,11 @@ module gpio #(
     assign gpio_wen = gpio_req & gpio_write;
     assign gpio_in = GPIO;
 
-    assign gpio_addr_ok = 1'b1;
+    assign gpio_ready = 1'b1;
     assign gpio_rdata = gpio_in;
 
     always @(posedge clk) begin
-        gpio_data_ok <= gpio_req & gpio_write;
+        gpio_rvalid <= gpio_req & gpio_write;
     end
 
 endmodule

@@ -30,8 +30,8 @@ module IF (
     output logic [`XLEN/8-1:0]  iram_wstrb,
     output logic [`XLEN-1:0]    iram_addr,
     output logic [`XLEN-1:0]    iram_wdata,
-    input  logic                iram_addr_ok,
-    input  logic                iram_data_ok,
+    input  logic                iram_ready,
+    input  logic                iram_rvalid,
     input  logic [`XLEN-1:0]    iram_rdata
 );
     // --------------------------------------
@@ -70,7 +70,7 @@ module IF (
     // --------------------------------------
 
     // Pipeline Control
-    assign preif_done = iram_req & iram_addr_ok;
+    assign preif_done = iram_req & iram_ready;
     assign preif_req = preif_done;
     assign preif_valid = preif_req; // at the current implementation, preif won't be flushed because we always want to
                                     // read the next instruction even if we flush other stages.
@@ -81,7 +81,7 @@ module IF (
     end
 
     assign if_valid = preif_pipe_valid & ~id_pipe_flush;
-    assign if_done = (iram_data_ok & ~flush_next_data) | backup_instruction_valid;
+    assign if_done = (iram_rvalid & ~flush_next_data) | backup_instruction_valid;
     assign if_req = if_done & if_valid;
     assign if_pipe_ready = ~if_valid | if_req & id_pipe_ready;
 
@@ -128,7 +128,7 @@ module IF (
             // update pc to nextPC value when the memory read request is taken and can be moved to next stage
             if (preif_done && if_pipe_ready) pc <= next_pc;
 
-            // If the addr_ok is not valid at the same cycle when the branch request comes,
+            // If the ready is not valid at the same cycle when the branch request comes,
             // then the request to fetch from the new address will not need to wait and the
             // targetPC (new address to the memory) will be lost because branch instruction is only valid for 1 cycle.
             // One solution is to update the PC register to TargetPC - 4 instead of TargetPC so the nextPC will
@@ -170,8 +170,8 @@ module IF (
     always @(posedge clk) begin
         if (!rst_b) flush_next_data <= 1'b0;
         else begin
-            if (preif_pipe_valid && !iram_data_ok && id_pipe_flush) flush_next_data <= 1'b1;
-            else if (flush_next_data & iram_data_ok) flush_next_data <= 1'b0;
+            if (preif_pipe_valid && !iram_rvalid && id_pipe_flush) flush_next_data <= 1'b1;
+            else if (flush_next_data & iram_rvalid) flush_next_data <= 1'b0;
         end
     end
 
@@ -196,23 +196,23 @@ module IF (
     cov_if_req_id_not_ready: cover property(if_req_id_not_ready);
 
     // Cover the case that the instruction read is accepted for the new branch target
-    property branch_addr_ok;
+    property branch_iram_ready;
         @(posedge clk) disable iff(!rst_b)
-        $rose(ex_branch) |-> iram_addr_ok;
+        $rose(ex_branch) |-> iram_ready;
     endproperty
-    cov_branch_addr_ok: cover property(branch_addr_ok);
+    cov_branch_iram_ready: cover property(branch_iram_ready);
 
     // Cover the case that the instruction read is waiting for the new branch target
-    property branch_wait_addr_ok;
+    property branch_wait_iram_ready;
         @(posedge clk) disable iff(!rst_b)
-        $rose(ex_branch) |-> !iram_addr_ok;
+        $rose(ex_branch) |-> !iram_ready;
     endproperty
-    cov_branch_wait_addr_ok: cover property(branch_wait_addr_ok);
+    cov_branch_wait_iram_ready: cover property(branch_wait_iram_ready);
 
     // Cover the case that IF is waiting for a pending read data while a branch request comes
     property branch_while_waiting_data;
         @(posedge clk) disable iff(!rst_b)
-        $rose(ex_branch) |-> (preif_pipe_valid && !iram_data_ok);
+        $rose(ex_branch) |-> (preif_pipe_valid && !iram_rvalid);
     endproperty
     cov_branch_while_waiting_data: cover property(branch_while_waiting_data);
 

@@ -144,35 +144,35 @@ We only have 1 solution here:
 
 Use an additional register to save the data (instruction) coming back from the instruction memory if ID stage is not able to take it When IF stage is ready, take the data from the register instead of the memory.
 
-#### Flushing and addr_ok/data_ok
+#### Flushing and bus ready/rvalid
 
-Considering different status of addr_ok and data_ok when IF is flushed
+Considering different status of ready and rvalid when IF is flushed
 
 When IF stage has a valid instruction (meaning the read request has already been accepted in pre-IF stage and IF_pipe_valid = 1),
 
-1. data_ok = 1: The data is just ready at the same cycle with flushing request.
+1. rvalid = 1: The data is just ready at the same cycle with flushing request.
 
    => Flushing this data. We just need to set IF_valid to zero.
 
-2. data_ok = 0: IF stage is still waiting for the data.
+2. rvalid = 0: IF stage is still waiting for the data.
 
    => We should discard this data when it is returned. Here we will need an extra register to store this information.
 
 When pre IF stage has a request going to memory, in our bus protocol, we allow changing the request as long as it is not being accepted. So we can lower  the request or change the address.
 
-#### Branch and addr_ok
+#### Branch and bus ready
 
 A branch request from EX stage will change the next PC value and interfere with the current instruction fetching by changing the address in pre IF stage.
 
-If the addr_ok is not valid at the same cycle when the branch request comes, then the request to fetch from the new address will not need to wait and the targetPC (new address to the memory) will be lost because branch instruction is only valid for 1 cycle from EX stage.
+If the ready is not valid at the same cycle when the branch request comes, then the request to fetch from the new address will not need to wait and the targetPC (new address to the memory) will be lost because branch instruction is only valid for 1 cycle from EX stage.
 
-One solution is to update the PC register to TargetPC - 4 instead of TargetPC so the nextPC will still be target PC in this case. 
+One solution is to update the PC register to TargetPC - 4 instead of TargetPC so the nextPC will still be target PC in this case.
 
 This is acceptable because the IF stage will not be valid until the read request is accepted. Once the request is accepted then PC becomes TargetPC and IF stage becomes valid in the next cycle. Everything goes back to normal.
 
 However, this might have some negative impact on debug because the temporary TargetPC - 4 value stored in PC register might be confusing but any way the stage is not valid in this case.
 
-By the way, when branch happens, IF and ID stages are flushed so there is no back pressure to pre IF stage so as long as the addr_ok is set, it can be moved to IF stage.
+By the way, when branch happens, IF and ID stages are flushed so there is no back pressure to pre IF stage so as long as the ready is set, it can be moved to IF stage.
 
 ## ID stage
 
@@ -207,7 +207,7 @@ For load instruction, data will be available only in MEM stage. If the instructi
 1. Flushing and stall simultaneously in ID stage. Considering the following instruction sequence:
 
    ```text
-    ID  |  EX  | MEM  
+    ID  |  EX  | MEM
     ADD |  BEQ | LW
    
    *ADD depends on LW instruction and BEQ is taken
@@ -215,7 +215,7 @@ For load instruction, data will be available only in MEM stage. If the instructi
 
    Due to the data dependency, ADD will requesting stalling the ID (and IF) stage and due to the taken BEQ, ID is flushed.
 
-   Flush should invalidate ADD and hence canceling the stall request. This is taken cared by our logic: 
+   Flush should invalidate ADD and hence canceling the stall request. This is taken cared by our logic:
 
    ```verilog
    assign id_pipe_ready = ~id_valid | id_req & ex_pipe_ready;
@@ -365,7 +365,7 @@ In SOC, we are planning to use AXI-lite bus as the interconnection bus so we int
 
 The SRAM bus is similar to a generic memory bus interface with few additional control signal added to ease the connection to the AXI-lite bus.
 
-We introduce the SRAM bus first because the pipeline control signal depends on the addr_ok and data_ok in the SRAM bus.
+We introduce the SRAM bus first because the pipeline control signal depends on the ready and rvalid in the SRAM bus.
 
 ### SRAM Bus signal
 
@@ -376,9 +376,9 @@ We introduce the SRAM bus first because the pipeline control signal depends on t
 | **wstrb**   | output    | BW    | **write strobe.** Byte enable for write request.                        |
 | addr        | output    | AW    | **Address.** Address of the transaction.                                |
 | wdata       | output    | DW    | **Write data.**                                                         |
-| **addr_ok** | input     | 1     | **Address OK.** When asserted, indicate the target accepts this request |
+| **ready** | input     | 1     | **Address OK.** When asserted, indicate the target accepts this request |
 | rdata       | input     | DW    | **Read data.**                                                          |
-| **data_ok** | input     | 1     | **Data OK.** When asserted, indicate the target returns the read data   |
+| **rvalid** | input     | 1     | **Data OK.** When asserted, indicate the target returns the read data   |
 
 BW: Number of bytes
 
@@ -394,7 +394,7 @@ AW: Address width
 
 2. Read without/with wait state on both address and data
 
-![read](assets/core/sram_bus_read.png)
+![read](assets/core/sram_bus_read.svg)
 
 ### SRAM Bus impact on pipeline control
 
@@ -402,16 +402,16 @@ With introduction of the SRAM bus, we have wait state for address/request and re
 
 #### Pre-IF stage
 
-- `preif_done` signal: `preif_done` need to consider `addr_ok` signal: `preif_done = req & addr_ok`
+- `preif_done` signal: `preif_done` need to consider `ready` signal: `preif_done = req & ready`
 
 #### IF stage
 
-- `if_done` signal: `if_done` need to consider `data_ok` signal: `if_done = data_ok`
+- `if_done` signal: `if_done` need to consider `rvalid` signal: `if_done = rvalid`
 
 #### EX stage
 
-- `ex_done` signal: `ex_done` need to consider `addr_ok` signal
+- `ex_done` signal: `ex_done` need to consider `ready` signal
 
 #### MEM stage
 
-- `mem_done` signal: `mem_done` need to consider `data_ok` signal
+- `mem_done` signal: `mem_done` need to consider `rvalid` signal

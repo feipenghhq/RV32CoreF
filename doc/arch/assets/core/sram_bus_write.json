@@ -1,11 +1,11 @@
 {signal: [
   {name: 'clk', 		wave: 'p......'},
   {name: 'req', 		wave: '010.1.0'},
-  {name: 'write', 		wave: '010.1.0'},  
-  {name: 'wstrb[3:0]', 	wave: 'x3x.3.x', data: ['4\'hF', '4\'hF']},  
-  {name: 'addr[31:0]', 	wave: 'x4x.4.x', data: ['A1', 'A2']},  
+  {name: 'write', 		wave: '010.1.0'},
+  {name: 'wstrb[3:0]', 	wave: 'x3x.3.x', data: ['4\'hF', '4\'hF']},
+  {name: 'addr[31:0]', 	wave: 'x4x.4.x', data: ['A1', 'A2']},
   {name: 'wdata[31:0]', wave: 'x5x.5.x', data: ['D1', 'D2']},
-  {name: 'addr_ok', 	wave: '010..10'}, 
+  {name: 'ready', 	wave: '010..10'},
   {name: 'rdata[31:0]', wave: 'x......', data: ['4\'hF']},
-  {name: 'data_ok', 	wave: '0......'}, 
+  {name: 'rvalid', 	wave: '0......'},
 ]}

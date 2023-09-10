@@ -34,8 +34,8 @@ module minisoc #(
     logic [`XLEN/8-1:0]  iram_wstrb;
     logic [`XLEN-1:0]    iram_addr;
     logic [`XLEN-1:0]    iram_wdata;
-    logic                iram_addr_ok;
-    logic                iram_data_ok;
+    logic                iram_ready;
+    logic                iram_rvalid;
     logic [`XLEN-1:0]    iram_rdata;
 
     // Data RAM Bus
@@ -44,8 +44,8 @@ module minisoc #(
     logic [`XLEN/8-1:0]  dram_wstrb;
     logic [`XLEN-1:0]    dram_addr;
     logic [`XLEN-1:0]    dram_wdata;
-    logic                dram_addr_ok;
-    logic                dram_data_ok;
+    logic                dram_ready;
+    logic                dram_rvalid;
     logic [`XLEN-1:0]    dram_rdata;
 
     // bus connecting data ram
@@ -54,8 +54,8 @@ module minisoc #(
     logic [`XLEN/8-1:0]  data_wstrb;
     logic [`XLEN-1:0]    data_addr;
     logic [`XLEN-1:0]    data_wdata;
-    logic                data_addr_ok;
-    logic                data_data_ok;
+    logic                data_ready;
+    logic                data_rvalid;
     logic [`XLEN-1:0]    data_rdata;
 
     // bus connecting gpio
@@ -64,8 +64,8 @@ module minisoc #(
     logic [`XLEN/8-1:0]  gpio_wstrb;
     logic [`XLEN-1:0]    gpio_addr;
     logic [`XLEN-1:0]    gpio_wdata;
-    logic                gpio_addr_ok;
-    logic                gpio_data_ok;
+    logic                gpio_ready;
+    logic                gpio_rvalid;
     logic [`XLEN-1:0]    gpio_rdata;
 
     logic                decode_is_gpio;
@@ -90,13 +90,13 @@ module minisoc #(
     assign data_addr  = dram_addr;
     assign data_wdata = dram_wdata;
 
-    assign dram_addr_ok = (decode_is_gpio & gpio_addr_ok) | (decode_is_dram & data_addr_ok);
-    // For simplicity, we just OR the data_ok assuming the following conditions hold true:
-    //  1.) data_ok is onehot and only one target receives the request each time.
-    //  2.) target device should only drive data_ok to high whenever its data is ready.
-    assign dram_data_ok = gpio_data_ok | data_data_ok;
-    assign dram_rdata = ({`XLEN{gpio_data_ok}} & gpio_rdata) |
-                        ({`XLEN{dram_data_ok}} & data_rdata) ;
+    assign dram_ready = (decode_is_gpio & gpio_ready) | (decode_is_dram & data_ready);
+    // For simplicity, we just OR the rvalid assuming the following conditions hold true:
+    //  1.) rvalid is onehot and only one target receives the request each time.
+    //  2.) target device should only drive rvalid to high whenever its data is ready.
+    assign dram_rvalid = gpio_rvalid | data_rvalid;
+    assign dram_rdata = ({`XLEN{gpio_rvalid}} & gpio_rdata) |
+                        ({`XLEN{dram_rvalid}} & data_rdata) ;
 
     // --------------------------------------
     // Module Instantiation
@@ -116,16 +116,16 @@ module minisoc #(
         .instr_wstrb(iram_wstrb),
         .instr_addr(iram_addr[RAM_AW-1:2]),
         .instr_wdata(iram_wdata),
-        .instr_addr_ok(iram_addr_ok),
-        .instr_data_ok(iram_data_ok),
+        .instr_ready(iram_ready),
+        .instr_rvalid(iram_rvalid),
         .instr_rdata(iram_rdata),
         .data_req(data_req),
         .data_write(data_write),
         .data_wstrb(data_wstrb),
         .data_addr(data_addr[RAM_AW-1:2]),
         .data_wdata(data_wdata),
-        .data_addr_ok(data_addr_ok),
-        .data_data_ok(data_data_ok),
+        .data_ready(data_ready),
+        .data_rvalid(data_rvalid),
         .data_rdata(data_rdata)
     );
 
@@ -138,8 +138,8 @@ module minisoc #(
         .gpio_wstrb(gpio_wstrb),
         .gpio_addr(gpio_addr[15:0]),
         .gpio_wdata(gpio_wdata),
-        .gpio_addr_ok(gpio_addr_ok),
-        .gpio_data_ok(gpio_data_ok),
+        .gpio_ready(gpio_ready),
+        .gpio_rvalid(gpio_rvalid),
         .gpio_rdata(gpio_rdata)
     );
 

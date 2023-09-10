@@ -24,8 +24,8 @@ module ram #(
     input  logic [DW/8-1:0]     instr_wstrb,
     input  logic [AW-1:0]       instr_addr,     // word address
     input  logic [DW-1:0]       instr_wdata,
-    output logic                instr_addr_ok,
-    output logic                instr_data_ok,
+    output logic                instr_ready,
+    output logic                instr_rvalid,
     output logic [DW-1:0]       instr_rdata,
     // data ports
     input  logic                data_req,
@@ -33,8 +33,8 @@ module ram #(
     input  logic [DW/8-1:0]     data_wstrb,
     input  logic [AW-1:0]       data_addr,      // word address
     input  logic [DW-1:0]       data_wdata,
-    output logic                data_addr_ok,
-    output logic                data_data_ok,
+    output logic                data_ready,
+    output logic                data_rvalid,
     output logic [DW-1:0]       data_rdata
 );
 
@@ -48,53 +48,53 @@ module ram #(
     // ---------------------------------------------
 
     initial begin
-        instr_data_ok = 1'b0;
-        instr_addr_ok = 1'b0;
+        instr_rvalid = 1'b0;
+        instr_ready = 1'b0;
     end
 
-    // Create 1 cycle delay for data_ok signal, can't make this randomized at this point so using
+    // Create 1 cycle delay for rvalid signal, can't make this randomized at this point so using
     // fixed delay
     always @(posedge clk) begin
-        if ($test$plusargs("IRAM_RANDOM_DATA_OK")) begin
+        if ($test$plusargs("IRAM_RANDOM_rvalid")) begin
             instr_rdata <= #10ns mem[instr_addr];
-            instr_data_ok <= #10ns instr_req & ~instr_write & instr_addr_ok;
+            instr_rvalid <= #10ns instr_req & ~instr_write & instr_ready;
         end
         else begin
             instr_rdata <= mem[instr_addr];
-            instr_data_ok <= instr_req & ~instr_write & instr_addr_ok;
+            instr_rvalid <= instr_req & ~instr_write & instr_ready;
         end
     end
 
     always @(instr_req) begin
-        // create 0 ~ 2 clock delay for addr_ok
-        if ($test$plusargs("IRAM_RANDOM_ADDR_OK")) begin
-            instr_addr_ok = 1'b0;
+        // create 0 ~ 2 clock delay for ready
+        if ($test$plusargs("IRAM_RANDOM_ready")) begin
+            instr_ready = 1'b0;
             if (instr_req) begin
                 repeat ($urandom_range(3)) @(posedge clk);
-                #0 instr_addr_ok = 1'b1;
+                #0 instr_ready = 1'b1;
             end
         end
         else begin
-            instr_addr_ok = 1'b1;
+            instr_ready = 1'b1;
         end
     end
 
-    //assign instr_addr_ok = 1'b1; // always accept request
+    //assign instr_ready = 1'b1; // always accept request
 
     // ---------------------------------------------
     // data ports
     // ---------------------------------------------
 
-    // Create 1 cycle delay for data_ok signal, can't make this randomized at this point so using
+    // Create 1 cycle delay for rvalid signal, can't make this randomized at this point so using
     // fixed delay
     always @(posedge clk) begin
-        if ($test$plusargs("DRAM_RANDOM_DATA_OK")) begin
+        if ($test$plusargs("DRAM_RANDOM_rvalid")) begin
             data_rdata <= #10ns mem[data_addr];
-            data_data_ok <= #10ns data_req & ~data_write & data_addr_ok;
+            data_rvalid <= #10ns data_req & ~data_write & data_ready;
         end
         else begin
             data_rdata <= mem[data_addr];
-            data_data_ok <= data_req & ~data_write & data_addr_ok;
+            data_rvalid <= data_req & ~data_write & data_ready;
         end
     end
 
@@ -109,16 +109,16 @@ module ram #(
     endgenerate
 
     always @(data_req) begin
-        // create 0 ~ 2 clock delay for addr_ok
-        if ($test$plusargs("DRAM_RANDOM_ADDR_OK")) begin
-            data_addr_ok = 1'b0;
+        // create 0 ~ 2 clock delay for ready
+        if ($test$plusargs("DRAM_RANDOM_ready")) begin
+            data_ready = 1'b0;
             if (data_req) begin
                 repeat ($urandom_range(3)) @(posedge clk);
-                #0 data_addr_ok = 1'b1;
+                #0 data_ready = 1'b1;
             end
         end
         else begin
-            data_addr_ok = 1'b1;
+            data_ready = 1'b1;
         end
     end
 

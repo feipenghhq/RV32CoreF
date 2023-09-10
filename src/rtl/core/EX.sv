@@ -62,7 +62,7 @@ module EX (
     output logic [`XLEN/8-1:0]          dram_wstrb,
     output logic [`XLEN-1:0]            dram_addr,
     output logic [`XLEN-1:0]            dram_wdata,
-    input  logic                        dram_addr_ok
+    input  logic                        dram_ready
 );
 
     // --------------------------------------
@@ -196,7 +196,7 @@ module EX (
     assign wstrb_word = {4{ex_pipe_mem_opcode[`MEM_OP_WORD]}};
     assign dram_wstrb = wstrb_byte | wstrb_half | wstrb_word;
 
-    assign dram_done = ex_pipe_valid & dram_req & dram_addr_ok;
+    assign dram_done = ex_pipe_valid & dram_req & dram_ready;
 
     // --------------------------------------
     // ALU src select

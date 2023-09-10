@@ -44,7 +44,7 @@ module MEM (
     output logic [`XLEN-1:0]            mem_rd_wdata,
     output logic                        mem_mem_read_wait,
     // Data RAM Access
-    input  logic                        dram_data_ok,
+    input  logic                        dram_rvalid,
     input  logic [`XLEN-1:0]            dram_rdata
 );
 
@@ -131,7 +131,7 @@ module MEM (
                        ({`XLEN{is_lhu}} & lhu_ext_data) |
                        ({`XLEN{is_lw}}  & dram_rdata) ;
 
-    assign load_done = mem_valid & mem_pipe_mem_read & dram_data_ok;
+    assign load_done = mem_valid & mem_pipe_mem_read & dram_rvalid;
 
     // --------------------------------------
     // Registr write back data selection
@@ -144,6 +144,6 @@ module MEM (
     assign mem_rd_write = mem_pipe_rd_write & mem_pipe_valid;
     assign mem_rd_addr = mem_pipe_rd_addr;
     assign mem_rd_wdata = rd_data;
-    assign mem_mem_read_wait = mem_pipe_mem_read & ~dram_data_ok;
+    assign mem_mem_read_wait = mem_pipe_mem_read & ~dram_rvalid;
 
 endmodule

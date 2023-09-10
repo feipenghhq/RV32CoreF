@@ -22,8 +22,8 @@ module core (
     output logic [`XLEN/8-1:0]  iram_wstrb,
     output logic [`XLEN-1:0]    iram_addr,
     output logic [`XLEN-1:0]    iram_wdata,
-    input  logic                iram_addr_ok,
-    input  logic                iram_data_ok,
+    input  logic                iram_ready,
+    input  logic                iram_rvalid,
     input  logic [`XLEN-1:0]    iram_rdata,
     // Data RAM Access
     output logic                dram_req,
@@ -31,8 +31,8 @@ module core (
     output logic [`XLEN/8-1:0]  dram_wstrb,
     output logic [`XLEN-1:0]    dram_addr,
     output logic [`XLEN-1:0]    dram_wdata,
-    input  logic                dram_addr_ok,
-    input  logic                dram_data_ok,
+    input  logic                dram_ready,
+    input  logic                dram_rvalid,
     input  logic [`XLEN-1:0]    dram_rdata
 );
 
