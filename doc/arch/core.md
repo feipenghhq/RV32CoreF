@@ -390,7 +390,7 @@ AW: Address width
 
 1. Write request without/with wait state
 
-![write request](assets/core/sram_bus_write.png)
+![write request](assets/core/sram_bus_write.svg)
 
 2. Read without/with wait state on both address and data
 
