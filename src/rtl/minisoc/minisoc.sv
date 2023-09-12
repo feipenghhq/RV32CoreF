@@ -140,7 +140,8 @@ module minisoc #(
         .gpio_wdata(gpio_wdata),
         .gpio_ready(gpio_ready),
         .gpio_rvalid(gpio_rvalid),
-        .gpio_rdata(gpio_rdata)
+        .gpio_rdata(gpio_rdata),
+        .GPIO(GPIO)
     );
 
 endmodule

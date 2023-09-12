@@ -23,12 +23,27 @@ include $(REPO)/src/rtl/rtl.mk
 
 IVERILOG_OPTIONS := -g2005-sv
 
-IVERILOG_PLUSARG = + DRAM_RANDOM_DATA_OK +DRAM_RANDOM_ADDR_OK +IRAM_RANDOM_DATA_OK +IRAM_RANDOM_ADDR_OK
+IVERILOG_PLUSARG := +DRAM_RANDOM_DATA_OK +DRAM_RANDOM_ADDR_OK +IRAM_RANDOM_DATA_OK +IRAM_RANDOM_ADDR_OK
+VPP_OPTIONS      := +$(DUMP) +TEST_NAME=$$@ $(IVERILOG_PLUSARG)
 
+XVLOG_OPTIONS := -sv
+XELAB_OPTIONS := -timescale 1ns/10ps
+
+XSIM_PLUSARG  += -testplusarg DRAM_RANDOM_DATA_OK
+XSIM_PLUSARG  += -testplusarg DRAM_RANDOM_ADDR_OK
+XSIM_PLUSARG  += -testplusarg IRAM_RANDOM_DATA_OK
+XSIM_PLUSARG  += -testplusarg IRAM_RANDOM_ADDR_OK
+ifeq ($(WAVE),1)
+XSIM_PLUSARG  += -testplusarg DUMP
+endif
+
+XSIM_OPTIONS  := -testplusarg TEST_NAME=$$@ $(XSIM_PLUSARG) -R
 
 ifeq ($(WAVE),1)
 	DUMP := DUMP
 endif
+
+SIM := iverilog
 
 #--------------------------------------------------------------------
 # functions
@@ -40,7 +55,13 @@ define func_template
 run_$(1): compile_$(1) $(1)_pre $$($(1)) $(1)_summary
 
 compile_$(1): $(SV_FILE) $(TB_PATH)/$(1)_tb.sv $(OUTPUT)
+ifeq ($(SIM), iverilog)
 	@iverilog $(IVERILOG_OPTIONS) -I $(INC_DIR) $(SV_FILE) $(TB_PATH)/$(1)_tb.sv -o $(OUTPUT)/run_$(1)
+else ifeq ($(SIM), vivado)
+	@cd $(OUTPUT); xvlog $(XVLOG_OPTIONS) -i $(INC_DIR) $(SV_FILE) $(TB_PATH)/$(1)_tb.sv
+	@cd $(OUTPUT); xelab $(XELAB_OPTIONS) tb
+endif
+
 
 $(eval $(call func_prepare,$(1)))
 
@@ -61,13 +82,19 @@ endef
 # func_run_test <test suite name> <test path> <test ram width>
 define func_run_test
 $$($(1)):
-	@rm -f memory.data golden.reference_output
+	@cd $(OUTPUT); rm -f memory.data golden.reference_output
 	@echo "Running test: $$@" | tee -a $(OUTPUT)/$(1).log
-	@python3 scripts/gen_instr_data.py `find -name $$@.*verilog` '1<<$(3)'
+	@cd $(OUTPUT); python3 $(REPO)/verif/scripts/gen_instr_data.py `find $(REPO)/verif/tests/ -name $$@.*verilog` '1<<$(3)'
 ifeq ($(1), riscv_arch_test)
-	@ln -s `find ./tests/riscv-arch-test -name $$@.reference_output` golden.reference_output
+	@cd $(OUTPUT); ln -s `find $(REPO)/verif/tests/riscv-arch-test -name $$@.reference_output` golden.reference_output
 endif
-	@vvp $(OUTPUT)/run_$(1) +$(DUMP) +TEST_NAME=$$@ $(IVERILOG_PLUSARG) | tee -a $(OUTPUT)/$(1).log
+ifeq ($(SIM), iverilog)
+	@cd $(OUTPUT); vvp run_$(1) $(VPP_OPTIONS) | tee -a $(1).log
+else ifeq ($(SIM), vivado)
+	@cd $(OUTPUT); xsim tb $(XSIM_OPTIONS) | tee -a $(1).log
+endif
+
+
 endef
 
 # function for print out summary
@@ -135,7 +162,14 @@ $(eval $(call func_run_test,riscv_tests,$(RISCV_TESTS_PATH),12))
 # Compile RTL only
 
 rtl_compile: $(OUTPUT)
+ifeq ($(SIM), iverilog)
 	@iverilog $(IVERILOG_OPTIONS) -I $(INC_DIR) $(SV_FILE) -o $(OUTPUT)/rvcore_f
+else ifeq ($(SIM), vivado)
+	@cd $(OUTPUT); xvlog $(XVLOG_OPTIONS) -i $(INC_DIR) $(SV_FILE)
+	@cd $(OUTPUT); xelab core
+endif
+
+
 
 rtl_lint:
 	@verilator -lint-only -Wall $(SV_FILE) -I$(INC_DIR)

@@ -22,7 +22,7 @@ module tb();
 
     logic       clk;
     logic       rst_b;
-    logic [7:0] GPIO;
+    wire  [7:0] GPIO;
     string      test_name;
 
     // ------------------------------
