@@ -13,7 +13,9 @@
 `include "config.svh"
 `include "core.svh"
 
-module core (
+module core #(
+    parameter PC_RESET_ADDR = `XLEN'h32
+) (
     input  logic                clk,
     input  logic                rst_b,
     // Instruction RAM Access
@@ -68,7 +70,11 @@ module core (
     logic [`MEM_OP_WIDTH-1:0]       ex_pipe_mem_opcode;
     logic                           ex_pipe_unsign;
     logic [`XLEN-1:0]               ex_pipe_immediate;
-
+    logic                           ex_pipe_csr_write;
+    logic                           ex_pipe_csr_set;
+    logic                           ex_pipe_csr_clear;
+    logic                           ex_pipe_csr_read;
+    logic [11:0]                    ex_pipe_csr_addr;
     // EX <--> MEM
     logic                           mem_pipe_ready;
     logic                           mem_pipe_flush;
@@ -82,7 +88,12 @@ module core (
     logic                           mem_pipe_rd_write;
     logic [`REG_AW-1:0]             mem_pipe_rd_addr;
     logic [`XLEN-1:0]               mem_pipe_alu_result;
-
+    logic                           mem_pipe_csr_write;
+    logic                           mem_pipe_csr_set;
+    logic                           mem_pipe_csr_clear;
+    logic                           mem_pipe_csr_read;
+    logic [`XLEN-1:0]               mem_pipe_csr_info;
+    logic [11:0]                    mem_pipe_csr_addr;
     // MEM <--> WB
     logic                           wb_pipe_ready;
     logic                           wb_pipe_flush;
@@ -92,7 +103,12 @@ module core (
     logic                           wb_pipe_rd_write;
     logic [`REG_AW-1:0]             wb_pipe_rd_addr;
     logic [`XLEN-1:0]               wb_pipe_rd_data;
-
+    logic                           wb_pipe_csr_write;
+    logic                           wb_pipe_csr_set;
+    logic                           wb_pipe_csr_clear;
+    logic                           wb_pipe_csr_read;
+    logic [`XLEN-1:0]               wb_pipe_csr_info;
+    logic [11:0]                    wb_pipe_csr_addr;
     // From EX stage
     logic                           ex_branch;
     logic [`XLEN-1:0]               ex_branch_pc;
@@ -113,7 +129,9 @@ module core (
     // Module Instantiation
     // --------------------------------------
 
-    IF u_if(.*);
+    IF #(
+        .PC_RESET_ADDR(PC_RESET_ADDR)
+    ) u_if(.*);
 
     ID u_id(.*);
 

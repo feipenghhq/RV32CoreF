@@ -12,7 +12,9 @@
 
 `include "config.svh"
 
-module IF (
+module IF #(
+    parameter PC_RESET_ADDR = `XLEN'h0
+) (
     input  logic                clk,
     input  logic                rst_b,
     // IF <--> ID Pipeline
@@ -122,7 +124,7 @@ module IF (
     always @(posedge clk) begin
         if (!rst_b) begin
             // because we use next_pc for ram address, we need to minus 4 here
-            pc <= `PC_RESET_ADDR - 4;
+            pc <= PC_RESET_ADDR - 4;
         end
         else begin
             // update pc to nextPC value when the memory read request is taken and can be moved to next stage

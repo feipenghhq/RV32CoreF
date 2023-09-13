@@ -13,7 +13,9 @@
 `include "config.svh"
 `include "core.svh"
 
-module ID (
+module ID #(
+    parameter ISA_Zicsr = 1  // Support "Zicsr" ISA
+) (
     input  logic                        clk,
     input  logic                        rst_b,
     // IF <--> ID Pipeline
@@ -43,6 +45,11 @@ module ID (
     output logic [`MEM_OP_WIDTH-1:0]    ex_pipe_mem_opcode,
     output logic                        ex_pipe_unsign,
     output logic [`XLEN-1:0]            ex_pipe_immediate,
+    output logic                        ex_pipe_csr_write,
+    output logic                        ex_pipe_csr_set,
+    output logic                        ex_pipe_csr_clear,
+    output logic                        ex_pipe_csr_read,
+    output logic [11:0]                 ex_pipe_csr_addr,
     // WB --> ID
     input  logic                        wb_rd_write,
     input  logic [`XLEN-1:0]            wb_rd_wdata,
@@ -91,6 +98,11 @@ module ID (
     logic [`MEM_OP_WIDTH-1:0]       dec_mem_opcode;
     logic                           dec_unsign;
     logic [`XLEN-1:0]               dec_immediate;
+    logic                           dec_csr_write;
+    logic                           dec_csr_set;
+    logic                           dec_csr_clear;
+    logic                           dec_csr_read;
+    logic [11:0]                    dec_csr_addr;
 
     // Forward logic
     logic                           rs1_match_ex;
@@ -102,6 +114,7 @@ module ID (
 
     // Stall logic
     logic                           id_depends_on_load;
+    logic                           id_depends_on_csr;
 
     // --------------------------------------
     // Pipeline Logic
@@ -143,26 +156,48 @@ module ID (
         end
     end
 
+    // CSR
+    generate
+    if (ISA_Zicsr) begin: gen_csr_pipe
+        always @(posedge clk) begin
+            if (ex_pipe_ready & id_req) begin
+                ex_pipe_csr_write <= dec_csr_write;
+                ex_pipe_csr_set   <= dec_csr_set;
+                ex_pipe_csr_clear <= dec_csr_clear;
+                ex_pipe_csr_read  <= dec_csr_read;
+                ex_pipe_csr_addr  <= dec_csr_addr;
+            end
+        end
+    end
+    else begin: no_csr_pipe
+        assign ex_pipe_csr_write = 1'b0;
+        assign ex_pipe_csr_set   = 1'b0;
+        assign ex_pipe_csr_clear = 1'b0;
+        assign ex_pipe_csr_read  = 1'b0;
+        assign ex_pipe_csr_addr  = 12'b0;
+    end
+    endgenerate
+
     // --------------------------------------
     // Forwarding Logic
     // --------------------------------------
-    assign rs1_match_ex  = (dec_rs1_addr == ex_rd_addr)  & ex_rd_write;
-    assign rs1_match_mem = (dec_rs1_addr == mem_rd_addr) & mem_rd_write;
-    assign rs1_match_wb  = (dec_rs1_addr == wb_rd_addr)  & wb_rd_write;
-    assign rs2_match_ex  = (dec_rs2_addr == ex_rd_addr)  & ex_rd_write;
-    assign rs2_match_mem = (dec_rs2_addr == mem_rd_addr) & mem_rd_write;
-    assign rs2_match_wb  = (dec_rs2_addr == wb_rd_addr)  & wb_rd_write;
+    assign rs1_match_ex  = dec_rs1_read & (dec_rs1_addr == ex_rd_addr)  & ex_rd_write;
+    assign rs1_match_mem = dec_rs1_read & (dec_rs1_addr == mem_rd_addr) & mem_rd_write;
+    assign rs1_match_wb  = dec_rs1_read & (dec_rs1_addr == wb_rd_addr)  & wb_rd_write;
+    assign rs2_match_ex  = dec_rs2_read & (dec_rs2_addr == ex_rd_addr)  & ex_rd_write;
+    assign rs2_match_mem = dec_rs2_read & (dec_rs2_addr == mem_rd_addr) & mem_rd_write;
+    assign rs2_match_wb  = dec_rs2_read & (dec_rs2_addr == wb_rd_addr)  & wb_rd_write;
 
     assign rs1_rdata_forwarded = (dec_rs1_addr == 0) ? 0 :
-                                 rs1_match_ex ? ex_rd_wdata :
+                                 rs1_match_ex  ? ex_rd_wdata :
                                  rs1_match_mem ? mem_rd_wdata :
-                                 rs1_match_wb ? wb_rd_wdata  :
+                                 rs1_match_wb  ? wb_rd_wdata  :
                                  rs1_rdata;
 
     assign rs2_rdata_forwarded = (dec_rs2_addr == 0) ? 0 :
-                                 rs2_match_ex ? ex_rd_wdata :
+                                 rs2_match_ex  ? ex_rd_wdata :
                                  rs2_match_mem ? mem_rd_wdata :
-                                 rs2_match_wb ? wb_rd_wdata :
+                                 rs2_match_wb  ? wb_rd_wdata :
                                  rs2_rdata;
 
     // --------------------------------------
@@ -179,8 +214,9 @@ module ID (
     // --------------------------------------
     // Module Instantiation
     // --------------------------------------
-    regfile #(.R0_ZERO(0))
-    u_regfile(
+    regfile #(
+        .R0_ZERO(0)
+    ) u_regfile(
         .rs1_addr(dec_rs1_addr),
         .rs2_addr(dec_rs2_addr),
         .rd_write(wb_rd_write),
@@ -188,7 +224,9 @@ module ID (
         .rd_wdata(wb_rd_wdata),
         .*);
 
-    decoder u_decoder(
+    decoder #(
+        .ISA_Zicsr(ISA_Zicsr)
+    ) u_decoder(
         .instruction(id_pipe_instruction),
         .*);
 

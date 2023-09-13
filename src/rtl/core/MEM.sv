@@ -13,7 +13,9 @@
 `include "core.svh"
 `include "config.svh"
 
-module MEM (
+module MEM #(
+    parameter ISA_Zicsr = 1  // Support "Zicsr" ISA
+) (
     input  logic                        clk,
     input  logic                        rst_b,
     // EX <--> MEM Pipeline
@@ -29,6 +31,12 @@ module MEM (
     input  logic                        mem_pipe_rd_write,
     input  logic [`REG_AW-1:0]          mem_pipe_rd_addr,
     input  logic [`XLEN-1:0]            mem_pipe_alu_result,
+    input  logic                        mem_pipe_csr_write,
+    input  logic                        mem_pipe_csr_set,
+    input  logic                        mem_pipe_csr_clear,
+    input  logic                        mem_pipe_csr_read,
+    input  logic [`XLEN-1:0]            mem_pipe_csr_info,
+    input  logic [11:0]                 mem_pipe_csr_addr,
     // MEM <--> WB Pipeline
     input  logic                        wb_pipe_ready,
     input  logic                        wb_pipe_flush,
@@ -38,6 +46,12 @@ module MEM (
     output logic                        wb_pipe_rd_write,
     output logic [`REG_AW-1:0]          wb_pipe_rd_addr,
     output logic [`XLEN-1:0]            wb_pipe_rd_data,
+    output logic                        wb_pipe_csr_write,
+    output logic                        wb_pipe_csr_set,
+    output logic                        wb_pipe_csr_clear,
+    output logic                        wb_pipe_csr_read,
+    output logic [`XLEN-1:0]            wb_pipe_csr_info,
+    output logic [11:0]                 wb_pipe_csr_addr,
     // MEM to other stage
     output logic                        mem_rd_write,
     output logic [`REG_AW-1:0]          mem_rd_addr,
@@ -103,6 +117,30 @@ module MEM (
         end
     end
 
+    // CSR
+    generate
+    if (ISA_Zicsr) begin: gen_csr_pipe
+        always @(posedge clk) begin
+            if (wb_pipe_ready & mem_req) begin
+                wb_pipe_csr_write <= mem_pipe_csr_write;
+                wb_pipe_csr_set   <= mem_pipe_csr_set;
+                wb_pipe_csr_clear <= mem_pipe_csr_clear;
+                wb_pipe_csr_read  <= mem_pipe_csr_read;
+                wb_pipe_csr_info  <= mem_pipe_csr_info;
+                wb_pipe_csr_addr  <= mem_pipe_csr_addr;
+            end
+        end
+    end
+    else begin: no_csr_pipe
+        assign wb_pipe_csr_write = 1'b0;
+        assign wb_pipe_csr_set = 1'b0;
+        assign wb_pipe_csr_clear = 1'b0;
+        assign wb_pipe_csr_read  = 1'b0;
+        assign wb_pipe_csr_info = `XLEN'b0;
+        assign wb_pipe_csr_addr  = 12'b0;
+    end
+    endgenerate
+
     // --------------------------------------
     // Memory Read Control
     // --------------------------------------
@@ -142,7 +180,7 @@ module MEM (
     // Forward logic to ID stage
     // --------------------------------------
     assign mem_rd_write = mem_pipe_rd_write & mem_pipe_valid;
-    assign mem_rd_addr = mem_pipe_rd_addr;
+    assign mem_rd_addr  = mem_pipe_rd_addr;
     assign mem_rd_wdata = rd_data;
     assign mem_mem_read_wait = mem_pipe_mem_read & ~dram_rvalid;
 

@@ -13,7 +13,9 @@
 `include "core.svh"
 `include "config.svh"
 
-module EX (
+module EX #(
+    parameter ISA_Zicsr = 1  // Support "Zicsr" ISA
+) (
     input  logic                        clk,
     input  logic                        rst_b,
     // ID <--> EX Pipeline
@@ -37,6 +39,11 @@ module EX (
     input  logic [`MEM_OP_WIDTH-1:0]    ex_pipe_mem_opcode,
     input  logic                        ex_pipe_unsign,
     input  logic [`XLEN-1:0]            ex_pipe_immediate,
+    input  logic                        ex_pipe_csr_write,
+    input  logic                        ex_pipe_csr_set,
+    input  logic                        ex_pipe_csr_clear,
+    input  logic                        ex_pipe_csr_read,
+    input  logic [11:0]                 ex_pipe_csr_addr,
     // EX <--> MEM Pipeline
     input  logic                        mem_pipe_ready,
     input  logic                        mem_pipe_flush,
@@ -50,6 +57,12 @@ module EX (
     output logic                        mem_pipe_rd_write,
     output logic [`REG_AW-1:0]          mem_pipe_rd_addr,
     output logic [`XLEN-1:0]            mem_pipe_alu_result,
+    output logic                        mem_pipe_csr_write,
+    output logic                        mem_pipe_csr_set,
+    output logic                        mem_pipe_csr_clear,
+    output logic                        mem_pipe_csr_read,
+    output logic [`XLEN-1:0]            mem_pipe_csr_info,
+    output logic [11:0]                 mem_pipe_csr_addr,
     // EX to other stage
     output logic                        ex_branch,       // jump and taken branch
     output logic [`XLEN-1:0]            ex_branch_pc,    // target pc
@@ -136,6 +149,32 @@ module EX (
         end
     end
 
+    // CSR
+    generate
+    if (ISA_Zicsr) begin: gen_csr_pipe
+        always @(posedge clk) begin
+            if (mem_pipe_ready & ex_req) begin
+                mem_pipe_csr_write <= ex_pipe_csr_write;
+                mem_pipe_csr_set   <= ex_pipe_csr_set;
+                mem_pipe_csr_clear <= ex_pipe_csr_clear;
+                mem_pipe_csr_read  <= ex_pipe_csr_read;
+                mem_pipe_csr_info <= ex_pipe_alu_src2_sel_imm ? ex_pipe_immediate : ex_pipe_rs1_rdata;
+                mem_pipe_csr_addr  <= ex_pipe_csr_addr;
+            end
+        end
+    end
+    else begin: no_csr_pipe
+        assign mem_pipe_csr_write = 1'b0;
+        assign mem_pipe_csr_set = 1'b0;
+        assign mem_pipe_csr_clear = 1'b0;
+        assign mem_pipe_csr_read  = 1'b0;
+        assign mem_pipe_csr_info = `XLEN'b0;
+        assign mem_pipe_csr_addr  = 12'b0;
+    end
+    endgenerate
+
+
+
     // --------------------------------------
     // Jump/Branch Control Logic
     // --------------------------------------
@@ -220,7 +259,7 @@ module EX (
     // Forward logic to ID stage
     // --------------------------------------
     assign ex_rd_write = ex_pipe_rd_write & ex_pipe_valid;
-    assign ex_rd_addr = ex_pipe_rd_addr;
+    assign ex_rd_addr  = ex_pipe_rd_addr;
     assign ex_rd_wdata = final_alu_result;
 
     // --------------------------------------

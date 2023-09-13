@@ -18,7 +18,9 @@
 `include "core.svh"
 `include "riscv_isa.svh"
 
-module decoder (
+module decoder #(
+    parameter ISA_Zicsr = 1
+) (
     input logic [`XLEN-1:0]             instruction,
     // contrl signal to downstrem pipeline stage
     output logic [`ALU_OP_WIDTH-1:0]    dec_alu_opcode,     // alu opcode
@@ -37,7 +39,12 @@ module decoder (
     output logic [`REG_AW-1:0]          dec_rs1_addr,       // rs1 address
     output logic                        dec_rs2_read,       // rs2 read
     output logic [`REG_AW-1:0]          dec_rs2_addr,       // rs2 address
-    output logic [`XLEN-1:0]            dec_immediate       // immediate value
+    output logic [`XLEN-1:0]            dec_immediate,      // immediate value
+    output logic                        dec_csr_write,      // csrrw/csrrwi
+    output logic                        dec_csr_set,        // csrrs/csrrsi
+    output logic                        dec_csr_clear,      // csrrc/csrrci
+    output logic                        dec_csr_read,       // csr read
+    output logic [11:0]                 dec_csr_addr        // csr address
 );
 
     logic [1:0] rv32i_phase;
@@ -50,11 +57,13 @@ module decoder (
     logic [`XLEN-1:0] j_type_imm_val;
     logic [`XLEN-1:0] s_type_imm_val;
     logic [`XLEN-1:0] b_type_imm_val;
+    logic [`XLEN-1:0] csr_type_imm_val;
     logic is_u_type_imm;
     logic is_i_type_imm;
     logic is_j_type_imm;
     logic is_s_type_imm;
     logic is_b_type_imm;
+    logic is_csr_type_imm;
 
     logic phase3;
     logic is_lui;
@@ -95,6 +104,16 @@ module decoder (
     logic is_bltu;
     logic is_bgeu;
     logic branch_is_unsigned;
+
+    // [Optional] CSR
+    logic is_csr;
+    logic is_csrrw; // csrrw/csrrwi
+    logic is_csrrs; // csrrs/csrrsi
+    logic is_csrrc; // csrrc/csrrci
+    logic csr_use_imm;
+    logic csrrw_read;
+    logic csrrs_write;
+    logic csrrc_write;
 
     // -------------------------------------------
     // Extract Each field from Instruction
@@ -171,7 +190,8 @@ module decoder (
     assign dec_alu_src1_sel[`ALU_SRC1_ZERO] = is_lui;
 
     // select immediate value
-    assign dec_alu_src2_sel_imm = dec_jump | is_branch | is_lui | is_auipc | is_itype | is_load | is_store;
+    assign dec_alu_src2_sel_imm = dec_jump | is_branch | is_lui | is_auipc | is_itype | is_load | is_store |
+                                  csr_use_imm;
 
     assign dec_alu_opcode[`ALU_OP_ADD] = is_add | is_branch | is_lui | is_auipc | is_load | is_store;
     assign dec_alu_opcode[`ALU_OP_SUB] = is_sub;
@@ -190,8 +210,8 @@ module decoder (
 
     assign dec_jump = is_jal | is_jalr;
     assign dec_rd_write = is_lui | is_auipc | dec_jump | is_itype | is_rtype | is_load;
-    assign dec_rs1_read = is_rtype | is_itype | is_jalr | is_load;
-    assign dec_rs2_read = is_rtype | is_store;
+    assign dec_rs1_read = is_rtype | is_itype | is_jalr | is_branch | is_load | is_store;
+    assign dec_rs2_read = is_rtype | is_store | is_branch;
     assign dec_mem_read = is_load;
     assign dec_mem_write = is_store;
 
@@ -207,10 +227,43 @@ module decoder (
     assign is_j_type_imm = is_jal;
     assign is_s_type_imm = is_store;
     assign is_b_type_imm = is_branch;
+    assign is_csr_type_imm = csr_use_imm;
     assign dec_immediate = ({32{is_i_type_imm}} & i_type_imm_val) |
                            ({32{is_u_type_imm}} & u_type_imm_val) |
                            ({32{is_j_type_imm}} & j_type_imm_val) |
                            ({32{is_s_type_imm}} & s_type_imm_val) |
-                           ({32{is_b_type_imm}} & b_type_imm_val) ;
+                           ({32{is_b_type_imm}} & b_type_imm_val) |
+                           ({32{is_csr_type_imm}} & csr_type_imm_val);
+
+    // CSR
+    generate
+    if (ISA_Zicsr) begin: gen_isa_zicsr
+        assign csrrw_read  = |dec_rd_addr;  // csrrw/csrrwi should not read CSR if rd = x0
+        assign csrrs_write = |dec_rs1_addr; // csrrs/csrrsi should not write CSR if rs1 = x0 (uimm = 0)
+        assign csrrc_write = csrrs_write;   // same condition as csrrs/csrrsi
+
+        assign is_csr   = (rv32i_opcode == `RV32I_OPCODE_CSR);
+        assign is_csrrw = is_csr & (rv32i_funct3[1:0] == 2'b00);
+        assign is_csrrs = is_csr & (rv32i_funct3[1:0] == 2'b10);
+        assign is_csrrc = is_csr & (rv32i_funct3[1:0] == 2'b11);
+        assign dec_csr_write = is_csrrw;
+        assign dec_csr_set   = is_csrrs & csrrs_write;
+        assign dec_csr_clear = is_csrrc & csrrc_write;
+        assign dec_csr_read  = is_csrrw & csrrw_read | is_csrrs | is_csrrc;
+        assign dec_csr_addr  = instruction[31:20];
+        assign csr_use_imm   = is_csr & rv32i_funct3[2];
+        assign csr_type_imm_val = {{`XLEN-5{1'b0}}, dec_rs1_addr};
+    end
+    else begin: no_isa_zicsr
+        assign is_csr        = 1'b0;
+        assign dec_csr_read  = 1'b0;
+        assign dec_csr_write = 1'b0;
+        assign dec_csr_clear = 1'b0;
+        assign dec_csr_set   = 1'b0;
+        assign dec_csr_addr  = 12'b0;
+        assign csr_use_imm   = 1'b0;
+        assign csr_type_imm_val = `XLEN'h0;
+    end
+    endgenerate
 
 endmodule
