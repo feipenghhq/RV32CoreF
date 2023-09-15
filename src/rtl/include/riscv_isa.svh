@@ -46,3 +46,14 @@
 `define RV32I_FUNC3_CSRRWI  3'b101
 `define RV32I_FUNC3_CSRRSI  3'b110
 `define RV32I_FUNC3_CSRRCI  3'b111
+
+// CSR address
+`define MSTATUS             12'h300
+`define MIE                 12'h304
+`define MTVEC               12'h305
+
+`define MSCRATCH            12'h340
+`define MEPC                12'h341
+`define MCAUSE              12'h342
+`define MTVAL               12'h343
+`define MIP                 12'h344

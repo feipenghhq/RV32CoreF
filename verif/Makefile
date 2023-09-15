@@ -24,7 +24,10 @@ include $(REPO)/src/rtl/rtl.mk
 IVERILOG_OPTIONS := -g2005-sv
 
 IVERILOG_PLUSARG := +DRAM_RANDOM_DATA_OK +DRAM_RANDOM_ADDR_OK +IRAM_RANDOM_DATA_OK +IRAM_RANDOM_ADDR_OK
-VPP_OPTIONS      := +$(DUMP) +TEST_NAME=$$@ $(IVERILOG_PLUSARG)
+VVP_OPTIONS      += +TEST_NAME=$$@ $(IVERILOG_PLUSARG)
+ifeq ($(WAVE),1)
+VVP_OPTIONS      += +DUMP
+endif
 
 XVLOG_OPTIONS := -sv
 XELAB_OPTIONS := -timescale 1ns/10ps
@@ -39,9 +42,7 @@ endif
 
 XSIM_OPTIONS  := -testplusarg TEST_NAME=$$@ $(XSIM_PLUSARG) -R
 
-ifeq ($(WAVE),1)
-	DUMP := DUMP
-endif
+
 
 SIM := iverilog
 
@@ -89,7 +90,7 @@ ifeq ($(1), riscv_arch_test)
 	@cd $(OUTPUT); ln -s `find $(REPO)/verif/tests/riscv-arch-test -name $$@.reference_output` golden.reference_output
 endif
 ifeq ($(SIM), iverilog)
-	@cd $(OUTPUT); vvp run_$(1) $(VPP_OPTIONS) | tee -a $(1).log
+	cd $(OUTPUT); vvp run_$(1) $(VVP_OPTIONS) | tee -a $(1).log
 else ifeq ($(SIM), vivado)
 	@cd $(OUTPUT); xsim tb $(XSIM_OPTIONS) | tee -a $(1).log
 endif
