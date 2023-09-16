@@ -14,7 +14,9 @@
 `include "core.svh"
 
 module core #(
-    parameter PC_RESET_ADDR = `XLEN'h32
+    parameter PC_RESET_ADDR = `XLEN'h0,
+    parameter ISA_ZICSR = 1,        // Support Zicsr instruction sets
+    parameter SUPPORT_TRAP = 1      // Support exception and interrupt
 ) (
     input  logic                clk,
     input  logic                rst_b,
@@ -35,7 +37,12 @@ module core #(
     output logic [`XLEN-1:0]    dram_wdata,
     input  logic                dram_ready,
     input  logic                dram_rvalid,
-    input  logic [`XLEN-1:0]    dram_rdata
+    input  logic [`XLEN-1:0]    dram_rdata,
+    // Interrput
+    input  logic                external_interrupt,
+    input  logic                software_interrupt,
+    input  logic                timer_interrupt,
+    input  logic                debug_interrupt
 );
 
     // --------------------------------------
@@ -48,7 +55,6 @@ module core #(
     logic                           id_pipe_flush;
     logic [`XLEN-1:0]               id_pipe_pc;
     logic [`XLEN-1:0]               id_pipe_instruction;
-
     // ID <--> EX
     logic                           ex_pipe_valid;
     logic                           ex_pipe_ready;
@@ -75,6 +81,9 @@ module core #(
     logic                           ex_pipe_csr_clear;
     logic                           ex_pipe_csr_read;
     logic [11:0]                    ex_pipe_csr_addr;
+    logic                           ex_pipe_exc_pending;
+    logic [3:0]                     ex_pipe_exc_code;
+    logic                           ex_pipe_exc_interrupt;
     // EX <--> MEM
     logic                           mem_pipe_ready;
     logic                           mem_pipe_flush;
@@ -94,6 +103,10 @@ module core #(
     logic                           mem_pipe_csr_read;
     logic [`XLEN-1:0]               mem_pipe_csr_info;
     logic [11:0]                    mem_pipe_csr_addr;
+    logic                           mem_pipe_exc_pending;
+    logic [3:0]                     mem_pipe_exc_code;
+    logic [`XLEN-1:0]               mem_pipe_exc_tval;
+    logic                           mem_pipe_exc_interrupt;
     // MEM <--> WB
     logic                           wb_pipe_ready;
     logic                           wb_pipe_flush;
@@ -109,6 +122,10 @@ module core #(
     logic                           wb_pipe_csr_read;
     logic [`XLEN-1:0]               wb_pipe_csr_info;
     logic [11:0]                    wb_pipe_csr_addr;
+    logic                           wb_pipe_exc_pending;
+    logic [3:0]                     wb_pipe_exc_code;
+    logic [`XLEN-1:0]               wb_pipe_exc_tval;
+    logic                           wb_pipe_exc_interrupt;
     // From EX stage
     logic                           ex_branch;
     logic [`XLEN-1:0]               ex_branch_pc;
@@ -124,6 +141,14 @@ module core #(
     logic                           wb_rd_write;
     logic [`XLEN-1:0]               wb_rd_wdata;
     logic [`REG_AW-1:0]             wb_rd_addr;
+    // MISC
+    logic                           interrupt_req;
+
+    // --------------------------------------
+    // Glue logic
+    // --------------------------------------
+
+    assign interrupt_req = external_interrupt | software_interrupt | timer_interrupt | debug_interrupt;
 
     // --------------------------------------
     // Module Instantiation
@@ -131,14 +156,17 @@ module core #(
 
     IF #(
         .PC_RESET_ADDR(PC_RESET_ADDR)
-    ) u_if(.*);
+    ) u_if (.*);
 
-    ID u_id(.*);
+    ID #(
+        .ISA_ZICSR(ISA_ZICSR),
+        .SUPPORT_TRAP(SUPPORT_TRAP)
+    ) u_id (.*);
 
-    EX u_ex(.*);
+    EX u_ex (.*);
 
-    MEM u_mem(.*);
+    MEM u_mem (.*);
 
-    WB u_wb(.*);
+    WB u_wb (.*);
 
 endmodule

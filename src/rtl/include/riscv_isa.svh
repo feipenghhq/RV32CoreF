@@ -21,6 +21,7 @@
 `define RV32I_OPCODE_LOAD      5'b00000
 `define RV32I_OPCODE_STORE     5'b01000
 `define RV32I_OPCODE_CSR       5'b11100
+`define RV32I_OPCODE_FENCE     5'b00011
 
 `define RV32I_FUNC3_ADD     3'b000
 `define RV32I_FUNC3_SUB     3'b000
@@ -57,3 +58,9 @@
 `define MCAUSE              12'h342
 `define MTVAL               12'h343
 `define MIP                 12'h344
+
+// Exception code
+`define INSTR_ADDR_MISALIGNED   4'd0
+`define ILLEGAL_INSTRUCTION     4'd2
+`define LOAD_ADDR_MISALIGNED    4'd4
+`define STORE_ADDR_MISALIGNED   4'd6

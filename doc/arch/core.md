@@ -222,6 +222,8 @@ For load instruction, data will be available only in MEM stage. If the instructi
    ```
 
    When ID is flushed, `id_valid = 0` => `~id_valid = 1` => `id_pipe_ready = 1` and won't be stalled.
+   
+   Similar situation applies to an instruction depending on senior CSR instruction.
 
 ### Opens
 
@@ -347,13 +349,25 @@ There are several source of the register write data:
 | Memory output | From Load instruction, merged with the result from EX stage at MEM stage     |
 | CSR output    | From CSR instruction, merged with the result from MEM stage at WB stage      |
 
+## CSR (Control and Status Register)
+
+CSR module is located in WB stage and all the CSR access (csr read and csr write) happens on WB stage so we don't need to deal with RAW (read after write) dependence on within CSR registers. 
+
+However, this will cause RAW dependence on non-CSR register (Register x1 - x31) and CSR register since the CSR data is only available on WB stage. In order to solve this issue, we choose to stall the pipeline when this RAW dependence occurs. We do add the forwarding path as the ROI is low in this case because CSR instructions are rarely used in the program.
+
+We only implemented necessary CSR registers (mainly CSR used by interrupt). Other CSR registers are read only and always return zero.
+
 ## Exception and Interrupt
 
 All the exception are handled as precise exception and processed at WB stage. All the exception generated along the path are store in the pipeline register and passed to the next stage.
 
-Interrupt is also treated as precise exception, and it will be handled similarly as precise exception. We log the interrupt at ID stage and pass the interrupt information from ID stage eventually to WB stage. **However, interrupt can only be logged at ID stage when ID stage is valid.** This is because this instruction will be flushed when it (and interrupt) enter WB stage and be executed when interrupt exit. (This is related to how the precise exception is handled). If the instruction in ID is not a valid instruction (bubble), then we don't know where the continue the execution.
+Interrupt is also treated as precise exception, and it will be handled similarly as precise exception. We log the interrupt at ID stage and pass the interrupt information from ID stage eventually to WB stage. **However, interrupt can only be logged at ID stage when ID stage is valid.** This is because this instruction will be flushed when it enter WB stage and be re-executed when interrupt exit. If the instruction in ID stage is not a valid instruction (bubble), then we don't know where the continue the execution after exiting interrupt.
 
-A pipeline stage will be invalidated if there are exception/interrupt in its downstream pipeline stage. For example, if MEM stage has an exception/interrupt, then IF/ID/EX stage will be invalidate. This will prevent the instruction commit to critical units (such as write memory) since the instruction will eventually be flushed out when exception/interrupt reach the WB stage.
+In ID stage, we only log the info that there is an interrupt pending but we don't log the interrupt type to save registers. This is OK because interrupt should not be changed once it is raised till it is processed so we wait to get the interrupt info in WB stage.
+
+A pipeline stage will be invalidated if there are exception/interrupt in its downstream pipeline stage. For example, if MEM stage has an exception/interrupt, then IF/ID/EX stage will be invalidate. This will prevent the instruction commit to critical units (such as write memory) since the instruction will eventually be flushed out when exception/interrupt reach the WB stage. 
+
+In order to improve timing in the pipeline control, a separate exception (including interrupt) valid signal is added to the pipeline stage to indicate that if there is an exception/instruction in the current stage so we can flush the pipeline stage accordingly using exception valid.
 
 ### Trap controller
 

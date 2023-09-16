@@ -71,6 +71,12 @@ module minisoc #(
     logic                decode_is_gpio;
     logic                decode_is_dram;
 
+    // Interrupt
+    logic                external_interrupt;
+    logic                software_interrupt;
+    logic                timer_interrupt;
+    logic                debug_interrupt;
+
     // --------------------------------------
     // Decode logic for GPIO and data RAM
     // --------------------------------------
@@ -97,6 +103,14 @@ module minisoc #(
     assign dram_rvalid = gpio_rvalid | data_rvalid;
     assign dram_rdata = ({`XLEN{gpio_rvalid}} & gpio_rdata) |
                         ({`XLEN{dram_rvalid}} & data_rdata) ;
+
+    // --------------------------------------
+    // Interrupt
+    // --------------------------------------
+    assign external_interrupt = 1'b0;
+    assign software_interrupt = 1'b0;
+    assign timer_interrupt = 1'b0;
+    assign debug_interrupt = 1'b0;
 
     // --------------------------------------
     // Module Instantiation

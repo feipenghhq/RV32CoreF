@@ -14,7 +14,8 @@
 `include "config.svh"
 
 module MEM #(
-    parameter ISA_Zicsr = 1  // Support "Zicsr" ISA
+    parameter ISA_ZICSR = 1,
+    parameter SUPPORT_TRAP = 1
 ) (
     input  logic                        clk,
     input  logic                        rst_b,
@@ -37,6 +38,10 @@ module MEM #(
     input  logic                        mem_pipe_csr_read,
     input  logic [`XLEN-1:0]            mem_pipe_csr_info,
     input  logic [11:0]                 mem_pipe_csr_addr,
+    input  logic                        mem_pipe_exc_pending,
+    input  logic [3:0]                  mem_pipe_exc_code,
+    input  logic [`XLEN-1:0]            mem_pipe_exc_tval,
+    input  logic                        mem_pipe_exc_interrupt,
     // MEM <--> WB Pipeline
     input  logic                        wb_pipe_ready,
     input  logic                        wb_pipe_flush,
@@ -52,6 +57,10 @@ module MEM #(
     output logic                        wb_pipe_csr_read,
     output logic [`XLEN-1:0]            wb_pipe_csr_info,
     output logic [11:0]                 wb_pipe_csr_addr,
+    output logic                        wb_pipe_exc_pending,
+    output logic [3:0]                  wb_pipe_exc_code,
+    output logic [`XLEN-1:0]            wb_pipe_exc_tval,
+    output logic                        wb_pipe_exc_interrupt,
     // MEM to other stage
     output logic                        mem_rd_write,
     output logic [`REG_AW-1:0]          mem_rd_addr,
@@ -89,11 +98,11 @@ module MEM #(
     // register write back
     logic [`XLEN-1:0]   rd_data;
 
+
     // --------------------------------------
-    // Pipeline Logic
+    // Pipeline Control
     // --------------------------------------
 
-    // Pipeline Control
     assign mem_valid = mem_pipe_valid & ~wb_pipe_flush;
     assign mem_done = ~mem_pipe_mem_read | load_done;
     assign mem_req = mem_done & mem_valid;
@@ -119,7 +128,7 @@ module MEM #(
 
     // CSR
     generate
-    if (ISA_Zicsr) begin: gen_csr_pipe
+    if (ISA_ZICSR) begin: gen_csr_pipe
         always @(posedge clk) begin
             if (wb_pipe_ready & mem_req) begin
                 wb_pipe_csr_write <= mem_pipe_csr_write;
@@ -138,6 +147,24 @@ module MEM #(
         assign wb_pipe_csr_read  = 1'b0;
         assign wb_pipe_csr_info = `XLEN'b0;
         assign wb_pipe_csr_addr  = 12'b0;
+    end
+    endgenerate
+
+    // Exception/Interrupt
+    generate
+    if (SUPPORT_TRAP) begin: gen_trap_pipe
+        always @(posedge clk) begin
+            if (wb_pipe_ready & mem_req) begin
+                wb_pipe_exc_pending <= mem_pipe_exc_pending;
+                wb_pipe_exc_code <= mem_pipe_exc_code;
+                wb_pipe_exc_interrupt <= mem_pipe_exc_interrupt;
+            end
+        end
+    end
+    else begin: no_trap_pipe
+        assign wb_pipe_exc_pending = 1'b0;
+        assign wb_pipe_exc_code = 4'b0;
+        assign wb_pipe_exc_interrupt = 1'b0;
     end
     endgenerate
 
@@ -174,11 +201,13 @@ module MEM #(
     // --------------------------------------
     // Registr write back data selection
     // --------------------------------------
+
     assign rd_data = mem_pipe_mem_read ? load_data : mem_pipe_alu_result;
 
     // --------------------------------------
     // Forward logic to ID stage
     // --------------------------------------
+
     assign mem_rd_write = mem_pipe_rd_write & mem_pipe_valid;
     assign mem_rd_addr  = mem_pipe_rd_addr;
     assign mem_rd_wdata = rd_data;

@@ -31,10 +31,19 @@ module WB (
     input  logic                        wb_pipe_csr_read,
     input  logic [`XLEN-1:0]            wb_pipe_csr_info,
     input  logic [11:0]                 wb_pipe_csr_addr,
+    input  logic                        wb_pipe_exc_pending,
+    input  logic [3:0]                  wb_pipe_exc_code,
+    input  logic [`XLEN-1:0]            wb_pipe_exc_tval,
+    input  logic                        wb_pipe_exc_interrupt,
     // To register writeback
     output logic                        wb_rd_write,
     output logic [`REG_AW-1:0]          wb_rd_addr,
-    output logic [`XLEN-1:0]            wb_rd_wdata
+    output logic [`XLEN-1:0]            wb_rd_wdata,
+    // Interrupt input
+    input  logic                        external_interrupt,
+    input  logic                        software_interrupt,
+    input  logic                        timer_interrupt,
+    input  logic                        debug_interrupt
 );
 
     // --------------------------------------

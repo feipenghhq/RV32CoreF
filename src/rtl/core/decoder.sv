@@ -19,7 +19,8 @@
 `include "riscv_isa.svh"
 
 module decoder #(
-    parameter ISA_Zicsr = 1
+    parameter ISA_ZICSR = 1,
+    parameter SUPPORT_TRAP = 1
 ) (
     input logic [`XLEN-1:0]             instruction,
     // contrl signal to downstrem pipeline stage
@@ -44,13 +45,14 @@ module decoder #(
     output logic                        dec_csr_set,        // csrrs/csrrsi
     output logic                        dec_csr_clear,      // csrrc/csrrci
     output logic                        dec_csr_read,       // csr read
-    output logic [11:0]                 dec_csr_addr        // csr address
+    output logic [11:0]                 dec_csr_addr,       // csr address
+    output logic                        dec_illegal_instr   // invalid instruction
 );
 
     logic [1:0] rv32i_phase;
     logic [4:0] rv32i_opcode;
     logic [2:0] rv32i_funct3;
-    //logic [6:0] rv32i_funct7;
+    logic [6:0] rv32i_funct7;
 
     logic [`XLEN-1:0] u_type_imm_val;
     logic [`XLEN-1:0] i_type_imm_val;
@@ -70,11 +72,17 @@ module decoder #(
     logic is_auipc;
     logic is_jal;
     logic is_jalr;
-
-    // I-type and R-type
     logic is_itype;
     logic is_rtype;
+    logic is_load;
+    logic is_store;
+    logic is_branch;
 
+
+    logic rv32i_funct7_eq_0x0;
+    logic rv32i_funct7_eq_0x20;
+
+    // Instruction opcode
     logic is_add;
     logic is_sub;
     logic is_sll;
@@ -85,18 +93,16 @@ module decoder #(
     logic is_sra;
     logic is_or;
     logic is_and;
+    logic is_csr;
+    logic is_fence;
 
-    // Load and Store instructions
-    logic is_load;
-    logic is_store;
-
+    // Load and Store
     logic load_is_unsigned;
     logic ls_is_half;
     logic ls_is_byte;
     logic ls_is_word;
 
     // Branch
-    logic is_branch;
     logic is_beq;
     logic is_bne;
     logic is_blt;
@@ -105,8 +111,16 @@ module decoder #(
     logic is_bgeu;
     logic branch_is_unsigned;
 
+    // Invalid instruction
+    logic invalid_opcode;
+    logic invalid_jalr;
+    logic invalid_bxx;
+    logic invalid_load;
+    logic invalid_store;
+    logic invalid_itype_rtype;
+    logic invalid_system; // invalid system type: opcode = 7'h1110011
+
     // [Optional] CSR
-    logic is_csr;
     logic is_csrrw; // csrrw/csrrwi
     logic is_csrrs; // csrrs/csrrsi
     logic is_csrrc; // csrrc/csrrci
@@ -121,7 +135,7 @@ module decoder #(
     assign rv32i_phase  = instruction[1:0];
     assign rv32i_opcode = instruction[6:2];
     assign rv32i_funct3 = instruction[14:12];
-    //assign rv32i_funct7 = instruction[31:25];
+    assign rv32i_funct7 = instruction[31:25];
 
     assign u_type_imm_val = {instruction[31:12], 12'b0};
     assign i_type_imm_val = {{20{instruction[31]}}, instruction[31:20]};
@@ -132,39 +146,44 @@ module decoder #(
     // -------------------------------------------
     // Decode the instruction
     // -------------------------------------------
+
     // RV32I Base Instruction Set (Not compressed)
+    // Opcode decode
     assign phase3   = (rv32i_phase == 2'b11);
     assign is_lui   = phase3 & (rv32i_opcode == `RV32I_OPCODE_LUI);
     assign is_auipc = phase3 & (rv32i_opcode == `RV32I_OPCODE_AUIPC);
     assign is_jal   = phase3 & (rv32i_opcode == `RV32I_OPCODE_JAL);
     assign is_jalr  = phase3 & (rv32i_opcode == `RV32I_OPCODE_JALR);
-
-    // I-type and R-type
+    assign is_fence = phase3 & (rv32i_opcode == `RV32I_OPCODE_FENCE);
+    assign is_load  = phase3 & (rv32i_opcode == `RV32I_OPCODE_LOAD);
+    assign is_store = phase3 & (rv32i_opcode == `RV32I_OPCODE_STORE);
+    assign is_branch = (rv32i_opcode == `RV32I_OPCODE_BRANCH);
     assign is_itype = phase3 & (rv32i_opcode == `RV32I_OPCODE_ITYPE);
     assign is_rtype = phase3 & (rv32i_opcode == `RV32I_OPCODE_RTYPE);
 
-    assign is_add  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_ADD) & (is_itype | is_rtype & ~instruction[30]);
-    assign is_sub  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_SUB) & (is_rtype & instruction[30]);
-    assign is_sll  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_SLL);
-    assign is_slt  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_SLT);
-    assign is_sltu = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_SLTU);
-    assign is_xor  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_XOR);
-    assign is_srl  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_SRL) & ~instruction[30];
-    assign is_sra  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_SRA) & instruction[30];
-    assign is_or   = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_OR);
-    assign is_and  = (is_itype | is_rtype) & (rv32i_funct3 == `RV32I_FUNC3_AND);
+    // Funct7
+    assign rv32i_funct7_eq_0x0  = (rv32i_funct7 == 7'h00);
+    assign rv32i_funct7_eq_0x20 = (rv32i_funct7 == 7'h20);
 
-    // Load and Store
-    assign is_load  = phase3 & (rv32i_opcode == `RV32I_OPCODE_LOAD);
-    assign is_store = phase3 & (rv32i_opcode == `RV32I_OPCODE_STORE);
+    // itype and rtype decode
+    assign is_slt  = (rv32i_funct3 == `RV32I_FUNC3_SLT)  & (is_itype | (is_rtype & rv32i_funct7_eq_0x0));
+    assign is_sltu = (rv32i_funct3 == `RV32I_FUNC3_SLTU) & (is_itype | (is_rtype & rv32i_funct7_eq_0x0));
+    assign is_xor  = (rv32i_funct3 == `RV32I_FUNC3_XOR)  & (is_itype | (is_rtype & rv32i_funct7_eq_0x0));
+    assign is_or   = (rv32i_funct3 == `RV32I_FUNC3_OR)   & (is_itype | (is_rtype & rv32i_funct7_eq_0x0));
+    assign is_and  = (rv32i_funct3 == `RV32I_FUNC3_AND)  & (is_itype | (is_rtype & rv32i_funct7_eq_0x0));
+    assign is_add  = (rv32i_funct3 == `RV32I_FUNC3_ADD)  & (is_itype | (is_rtype & rv32i_funct7_eq_0x0));
+    assign is_srl  = (rv32i_funct3 == `RV32I_FUNC3_SRL)  & ((is_itype & & rv32i_funct7_eq_0x0) | (is_rtype & rv32i_funct7_eq_0x0));
+    assign is_sra  = (rv32i_funct3 == `RV32I_FUNC3_SRA)  & ((is_itype & & rv32i_funct7_eq_0x20)| (is_rtype & rv32i_funct7_eq_0x20));
+    assign is_sll  = (rv32i_funct3 == `RV32I_FUNC3_SLL)  & ((is_itype & & rv32i_funct7_eq_0x0) | (is_rtype & rv32i_funct7_eq_0x0));
+    assign is_sub  = (rv32i_funct3 == `RV32I_FUNC3_SUB)  & (is_rtype & rv32i_funct7_eq_0x20);
 
+    // Load and Store decode
     assign load_is_unsigned = is_load & rv32i_funct3[2];
     assign ls_is_byte = (rv32i_funct3[1:0] == 2'h0);
     assign ls_is_half = (rv32i_funct3[1:0] == 2'h1);
     assign ls_is_word = (rv32i_funct3[1:0] == 2'h2);
 
-    // Branch
-    assign is_branch = (rv32i_opcode == `RV32I_OPCODE_BRANCH);
+    // Branch decode
     assign is_beq  = is_branch & (rv32i_funct3 == `RV32I_FUNC3_BEQ);
     assign is_bne  = is_branch & (rv32i_funct3 == `RV32I_FUNC3_BNE);
     assign is_blt  = is_branch & (rv32i_funct3 == `RV32I_FUNC3_BLT);
@@ -172,10 +191,6 @@ module decoder #(
     assign is_bltu = is_branch & (rv32i_funct3 == `RV32I_FUNC3_BLTU);
     assign is_bgeu = is_branch & (rv32i_funct3 == `RV32I_FUNC3_BGEU);
     assign branch_is_unsigned = is_branch & rv32i_funct3[1];
-
-    // Illegal Instruction
-    //assign illegal_instr = ~(is_lui   | is_auipc | is_jal  | is_jalr  |
-    //                         is_itype | is_rtype | is_load | is_store | is_branch);
 
     // -------------------------------------------
     // Control signal generation
@@ -235,9 +250,15 @@ module decoder #(
                            ({32{is_b_type_imm}} & b_type_imm_val) |
                            ({32{is_csr_type_imm}} & csr_type_imm_val);
 
+    // Note: doing nothing for fence instruction at this point because our execution is in order.
+
+    // -------------------------------------------
+    // Optional Features
+    // -------------------------------------------
+
     // CSR
     generate
-    if (ISA_Zicsr) begin: gen_isa_zicsr
+    if (ISA_ZICSR) begin: gen_ISA_ZICSR
         assign csrrw_read  = |dec_rd_addr;  // csrrw/csrrwi should not read CSR if rd = x0
         assign csrrs_write = |dec_rs1_addr; // csrrs/csrrsi should not write CSR if rs1 = x0 (uimm = 0)
         assign csrrc_write = csrrs_write;   // same condition as csrrs/csrrsi
@@ -254,15 +275,49 @@ module decoder #(
         assign csr_use_imm   = is_csr & rv32i_funct3[2];
         assign csr_type_imm_val = {{`XLEN-5{1'b0}}, dec_rs1_addr};
     end
-    else begin: no_isa_zicsr
-        assign is_csr        = 1'b0;
+    else begin: no_ISA_ZICSR
+        assign is_csr = 1'b0;
+        assign is_csrrw = 1'b0;
+        assign is_csrrs = 1'b0;
+        assign is_csrrc = 1'b0;
+        assign csr_use_imm = 1'b0;
+        assign csrrw_read = 1'b0;
+        assign csrrs_write = 1'b0;
+        assign csrrc_write = 1'b0;
         assign dec_csr_read  = 1'b0;
         assign dec_csr_write = 1'b0;
         assign dec_csr_clear = 1'b0;
         assign dec_csr_set   = 1'b0;
         assign dec_csr_addr  = 12'b0;
-        assign csr_use_imm   = 1'b0;
         assign csr_type_imm_val = `XLEN'h0;
+    end
+    endgenerate
+
+    // Illegal Instruction
+    generate
+    if (SUPPORT_TRAP) begin: gen_exception
+        assign invalid_opcode = ~(is_lui | is_auipc | is_rtype | is_jalr | is_itype |
+                                  is_jal | is_fence | is_store | is_load | is_branch);
+        assign invalid_jalr = is_jalr & (|rv32i_funct3); // For JALR funct = 0
+        assign invalid_bxx = is_branch & (rv32i_funct3[2:1] == 2'b01);
+        assign invalid_load = is_load & ((rv32i_funct3[2:1] == 2'b11 ) | (rv32i_funct3[1:0]==2'b11));
+        assign invalid_store = is_store & (rv32i_funct3[2] | (rv32i_funct3[1:0]==2'b11));
+        assign invalid_itype_rtype = (is_itype | is_rtype) &
+                                    ~(is_slt | is_sltu | is_xor | is_or  | is_and |
+                                      is_add | is_srl  | is_sra | is_sll | is_sub);
+        assign invalid_system = ISA_ZICSR & is_csr &
+                                ((rv32i_funct3 == 3'b000) | (rv32i_funct3 == 3'b100)); // For now, we only support CSR as system instruction
+        assign dec_illegal_instr = invalid_opcode | invalid_jalr   | invalid_bxx | invalid_load |
+                                    invalid_store | invalid_system | invalid_itype_rtype;
+    end
+    else begin: no_exception
+        assign invalid_opcode = 1'b0;
+        assign invalid_jalr = 1'b0;
+        assign invalid_bxx = 1'b0;
+        assign invalid_load = 1'b0;
+        assign invalid_store = 1'b0;
+        assign invalid_itype_rtype = 1'b0;
+        assign dec_illegal_instr = 1'b0;
     end
     endgenerate
 
