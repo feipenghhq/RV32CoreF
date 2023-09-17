@@ -64,3 +64,8 @@
 `define ILLEGAL_INSTRUCTION     4'd2
 `define LOAD_ADDR_MISALIGNED    4'd4
 `define STORE_ADDR_MISALIGNED   4'd6
+
+// Interrupt code
+`define M_SOFTWARE_INTERRUPT    4'd3
+`define M_TIMER_INTERRUPT       4'd7
+`define M_EXTERNAL_INTERRUPT    4'd11

@@ -96,8 +96,10 @@ module csr (
     output logic                csr_rd_mie_meie,
     output logic [`XLEN-3:0]    csr_rd_mtvec_base,
     output logic [1:0]          csr_rd_mtvec_mode,
+    output logic [`XLEN-1:0]    csr_rd_mepc_mepc,
     // Trap related information
-    input  logic                trap
+    input  logic                ent_trap,
+    input  logic                ext_trap
 );
 
     // ------------------------------------------
@@ -155,8 +157,8 @@ module csr (
     // Currently we only support Machine mode so we only need to implement MIE, MPIE
     // MPP is always 2'b11 in this case
     `CSR_REG_LOGIC(mstatus, `MSTATUS)
-    `CSR_FIELD_LOGIC_HW(mstatus, mie,  1, 0, trap, [3])
-    `CSR_FIELD_LOGIC_HW(mstatus, mpie, 1, 0, trap, [7])
+    `CSR_FIELD_LOGIC_HW(mstatus, mie,  1, 0, (ent_trap | ext_trap), [3])
+    `CSR_FIELD_LOGIC_HW(mstatus, mpie, 1, 0, (ent_trap | ext_trap), [7])
     assign csr_rd_mstatus_mie  = mstatus_mie;
     assign csr_rd_mstatus_mpie = mstatus_mpie;
 
@@ -204,7 +206,7 @@ module csr (
     end
 
     // ------------------------------------------
-    // Machine trap-handler base address (mtvec)
+    // Machine ent_trap-handler base address (mtvec)
     // ------------------------------------------
 
     struct packed {
@@ -244,8 +246,8 @@ module csr (
     } mcause;
 
     `CSR_REG_LOGIC(mcause, `MCAUSE)
-    `CSR_FIELD_LOGIC_HW(mcause, interrupt, 1, 0, trap, [`XLEN-1])
-    `CSR_FIELD_LOGIC_HW(mcause, exception_code, (`XLEN-1), 0, trap, [`XLEN-2:0])
+    `CSR_FIELD_LOGIC_HW(mcause, interrupt, 1, 0, ent_trap, [`XLEN-1])
+    `CSR_FIELD_LOGIC_HW(mcause, exception_code, (`XLEN-1), 0, ent_trap, [`XLEN-2:0])
 
     // ------------------------------------------
     // Machine exception program counter register (mepc)
@@ -256,12 +258,12 @@ module csr (
     } mepc;
 
     `CSR_REG_LOGIC(mepc, `MEPC)
-    `CSR_FIELD_LOGIC_HW(mepc, mepc, (`XLEN), 0, trap, [`XLEN-1:0])
-
+    `CSR_FIELD_LOGIC_HW(mepc, mepc, (`XLEN), 0, ent_trap, [`XLEN-1:0])
+    assign csr_rd_mepc_mepc = mepc_mepc;
     assign mepc.mepc = mepc_mepc;
 
     // ------------------------------------------
-    // Machine trap cause (mtval)
+    // Machine ent_trap cause (mtval)
     // ------------------------------------------
 
     struct packed {
@@ -269,7 +271,7 @@ module csr (
     } mtval;
 
     `CSR_REG_LOGIC(mtval, `MTVAL)
-    `CSR_FIELD_LOGIC_HW(mtval, mtval, (`XLEN), 0, trap, [`XLEN-1:0])
+    `CSR_FIELD_LOGIC_HW(mtval, mtval, (`XLEN), 0, ent_trap, [`XLEN-1:0])
 
     assign mtval.mtval = mtval_mtval;
 

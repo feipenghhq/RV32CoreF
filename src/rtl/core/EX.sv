@@ -128,6 +128,8 @@ module EX #(
     // MISC
     logic [`XLEN-1:0]   pc_plus4;
     logic [`XLEN-1:0]   final_alu_result;
+
+    logic [`XLEN-1:0]   exception_tval;
     logic               exception_pending;
     logic [3:0]         exception_code;
 
@@ -306,6 +308,12 @@ module EX #(
     // --------------------------------------
     // Exception
     // --------------------------------------
+    assign exception_tval = {`XLEN{exc_instr_addr_misaligned}} & ex_branch_pc |
+                            {`XLEN{exc_load_addr_misaligned | exc_store_addr_misaligned}} & dram_addr |
+                            // If no exception in this stage, put the instruction value
+                            // (for invalid instruction exception)
+                            {`XLEN{~exception_pending}} & ex_pipe_instruction;
+
 
     assign exception_pending = ex_valid & (exc_load_addr_misaligned | exc_store_addr_misaligned | exc_instr_addr_misaligned);
     assign exception_code = {4{exc_load_addr_misaligned}}  & `LOAD_ADDR_MISALIGNED  |
