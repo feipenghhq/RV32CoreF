@@ -1,0 +1,164 @@
+
+generated/rv32mi-p-zicntr:     file format elf32-littleriscv
+
+
+Disassembly of section .text.init:
+
+00000000 <_start>:
+   0:	00000093          	li	ra,0
+   4:	00000113          	li	sp,0
+   8:	00000193          	li	gp,0
+   c:	00000213          	li	tp,0
+  10:	00000293          	li	t0,0
+  14:	00000313          	li	t1,0
+  18:	00000393          	li	t2,0
+  1c:	00000413          	li	s0,0
+  20:	00000493          	li	s1,0
+  24:	00000513          	li	a0,0
+  28:	00000593          	li	a1,0
+  2c:	00000613          	li	a2,0
+  30:	00000693          	li	a3,0
+  34:	00000713          	li	a4,0
+  38:	00000793          	li	a5,0
+  3c:	00000813          	li	a6,0
+  40:	00000893          	li	a7,0
+  44:	00000913          	li	s2,0
+  48:	00000993          	li	s3,0
+  4c:	00000a13          	li	s4,0
+  50:	00000a93          	li	s5,0
+  54:	00000b13          	li	s6,0
+  58:	00000b93          	li	s7,0
+  5c:	00000c13          	li	s8,0
+  60:	00000c93          	li	s9,0
+  64:	00000d13          	li	s10,0
+  68:	00000d93          	li	s11,0
+  6c:	00000e13          	li	t3,0
+  70:	00000e93          	li	t4,0
+  74:	00000f13          	li	t5,0
+  78:	00000f93          	li	t6,0
+  7c:	00000297          	auipc	t0,0x0
+  80:	12828293          	addi	t0,t0,296 # 1a4 <mtvec_handler>
+  84:	30529073          	csrw	mtvec,t0
+
+00000088 <test_2>:
+  88:	00200193          	li	gp,2
+  8c:	c0003073          	csrc	cycle,zero
+  90:	00000393          	li	t2,0
+  94:	0e701c63          	bne	zero,t2,18c <fail>
+
+00000098 <test_3>:
+  98:	00300193          	li	gp,3
+  9c:	c0002073          	rdcycle	zero
+  a0:	00000393          	li	t2,0
+  a4:	0e701463          	bne	zero,t2,18c <fail>
+
+000000a8 <test_4>:
+  a8:	00400193          	li	gp,4
+  ac:	c0007073          	csrci	cycle,0
+  b0:	00000393          	li	t2,0
+  b4:	0c701c63          	bne	zero,t2,18c <fail>
+
+000000b8 <test_5>:
+  b8:	00500193          	li	gp,5
+  bc:	c0006073          	csrsi	cycle,0
+  c0:	00000393          	li	t2,0
+  c4:	0c701463          	bne	zero,t2,18c <fail>
+
+000000c8 <test_6>:
+  c8:	00600193          	li	gp,6
+  cc:	c0203073          	csrc	instret,zero
+  d0:	00000393          	li	t2,0
+  d4:	0a701c63          	bne	zero,t2,18c <fail>
+
+000000d8 <test_7>:
+  d8:	00700193          	li	gp,7
+  dc:	c0202073          	rdinstret	zero
+  e0:	00000393          	li	t2,0
+  e4:	0a701463          	bne	zero,t2,18c <fail>
+
+000000e8 <test_8>:
+  e8:	00800193          	li	gp,8
+  ec:	c0207073          	csrci	instret,0
+  f0:	00000393          	li	t2,0
+  f4:	08701c63          	bne	zero,t2,18c <fail>
+
+000000f8 <test_9>:
+  f8:	00900193          	li	gp,9
+  fc:	c0206073          	csrsi	instret,0
+ 100:	00000393          	li	t2,0
+ 104:	08701463          	bne	zero,t2,18c <fail>
+
+00000108 <test_12>:
+ 108:	00c00193          	li	gp,12
+ 10c:	c8003073          	csrc	cycleh,zero
+ 110:	00000393          	li	t2,0
+ 114:	06701c63          	bne	zero,t2,18c <fail>
+
+00000118 <test_13>:
+ 118:	00d00193          	li	gp,13
+ 11c:	c8002073          	rdcycleh	zero
+ 120:	00000393          	li	t2,0
+ 124:	06701463          	bne	zero,t2,18c <fail>
+
+00000128 <test_14>:
+ 128:	00e00193          	li	gp,14
+ 12c:	c8007073          	csrci	cycleh,0
+ 130:	00000393          	li	t2,0
+ 134:	04701c63          	bne	zero,t2,18c <fail>
+
+00000138 <test_15>:
+ 138:	00f00193          	li	gp,15
+ 13c:	c8006073          	csrsi	cycleh,0
+ 140:	00000393          	li	t2,0
+ 144:	04701463          	bne	zero,t2,18c <fail>
+
+00000148 <test_16>:
+ 148:	01000193          	li	gp,16
+ 14c:	c8203073          	csrc	instreth,zero
+ 150:	00000393          	li	t2,0
+ 154:	02701c63          	bne	zero,t2,18c <fail>
+
+00000158 <test_17>:
+ 158:	01100193          	li	gp,17
+ 15c:	c8202073          	rdinstreth	zero
+ 160:	00000393          	li	t2,0
+ 164:	02701463          	bne	zero,t2,18c <fail>
+
+00000168 <test_18>:
+ 168:	01200193          	li	gp,18
+ 16c:	c8207073          	csrci	instreth,0
+ 170:	00000393          	li	t2,0
+ 174:	00701c63          	bne	zero,t2,18c <fail>
+
+00000178 <test_19>:
+ 178:	01300193          	li	gp,19
+ 17c:	c8206073          	csrsi	instreth,0
+ 180:	00000393          	li	t2,0
+ 184:	00701463          	bne	zero,t2,18c <fail>
+ 188:	00301863          	bne	zero,gp,198 <pass>
+
+0000018c <fail>:
+ 18c:	00100e13          	li	t3,1
+ 190:	00200e93          	li	t4,2
+ 194:	0000006f          	j	194 <fail+0x8>
+
+00000198 <pass>:
+ 198:	00100e13          	li	t3,1
+ 19c:	00100e93          	li	t4,1
+ 1a0:	0000006f          	j	1a0 <pass+0x8>
+
+000001a4 <mtvec_handler>:
+ 1a4:	fe9ff06f          	j	18c <fail>
+ 1a8:	c0001073          	unimp
+ 1ac:	0000                	unimp
+ 1ae:	0000                	unimp
+ 1b0:	0000                	unimp
+ 1b2:	0000                	unimp
+ 1b4:	0000                	unimp
+ 1b6:	0000                	unimp
+ 1b8:	0000                	unimp
+ 1ba:	0000                	unimp
+ 1bc:	0000                	unimp
+ 1be:	0000                	unimp
+ 1c0:	0000                	unimp
+ 1c2:	0000                	unimp

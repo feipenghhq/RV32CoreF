@@ -1,0 +1,114 @@
+
+generated/rv32mi-p-sh-misaligned:     file format elf32-littleriscv
+
+
+Disassembly of section .text.init:
+
+00000000 <_start>:
+   0:	00000093          	li	ra,0
+   4:	00000113          	li	sp,0
+   8:	00000193          	li	gp,0
+   c:	00000213          	li	tp,0
+  10:	00000293          	li	t0,0
+  14:	00000313          	li	t1,0
+  18:	00000393          	li	t2,0
+  1c:	00000413          	li	s0,0
+  20:	00000493          	li	s1,0
+  24:	00000513          	li	a0,0
+  28:	00000593          	li	a1,0
+  2c:	00000613          	li	a2,0
+  30:	00000693          	li	a3,0
+  34:	00000713          	li	a4,0
+  38:	00000793          	li	a5,0
+  3c:	00000813          	li	a6,0
+  40:	00000893          	li	a7,0
+  44:	00000913          	li	s2,0
+  48:	00000993          	li	s3,0
+  4c:	00000a13          	li	s4,0
+  50:	00000a93          	li	s5,0
+  54:	00000b13          	li	s6,0
+  58:	00000b93          	li	s7,0
+  5c:	00000c13          	li	s8,0
+  60:	00000c93          	li	s9,0
+  64:	00000d13          	li	s10,0
+  68:	00000d93          	li	s11,0
+  6c:	00000e13          	li	t3,0
+  70:	00000e93          	li	t4,0
+  74:	00000f13          	li	t5,0
+  78:	00000f93          	li	t6,0
+  7c:	00000297          	auipc	t0,0x0
+  80:	09028293          	addi	t0,t0,144 # 10c <mtvec_handler>
+  84:	30529073          	csrw	mtvec,t0
+
+00000088 <test_2>:
+  88:	00200193          	li	gp,2
+  8c:	19000093          	li	ra,400
+  90:	00001137          	lui	sp,0x1
+  94:	23410113          	addi	sp,sp,564 # 1234 <_end+0x1094>
+  98:	00000797          	auipc	a5,0x0
+  9c:	01478793          	addi	a5,a5,20 # ac <test_2+0x24>
+  a0:	00209023          	sh	sp,0(ra)
+  a4:	00009703          	lh	a4,0(ra)
+  a8:	0080006f          	j	b0 <test_2+0x28>
+  ac:	00010713          	mv	a4,sp
+  b0:	000013b7          	lui	t2,0x1
+  b4:	23438393          	addi	t2,t2,564 # 1234 <_end+0x1094>
+  b8:	02771e63          	bne	a4,t2,f4 <fail>
+
+000000bc <test_3>:
+  bc:	00300193          	li	gp,3
+  c0:	19000093          	li	ra,400
+  c4:	00005137          	lui	sp,0x5
+  c8:	67810113          	addi	sp,sp,1656 # 5678 <_end+0x54d8>
+  cc:	00000797          	auipc	a5,0x0
+  d0:	01478793          	addi	a5,a5,20 # e0 <test_3+0x24>
+  d4:	002090a3          	sh	sp,1(ra)
+  d8:	00109703          	lh	a4,1(ra)
+  dc:	0080006f          	j	e4 <test_3+0x28>
+  e0:	00010713          	mv	a4,sp
+  e4:	000053b7          	lui	t2,0x5
+  e8:	67838393          	addi	t2,t2,1656 # 5678 <_end+0x54d8>
+  ec:	00771463          	bne	a4,t2,f4 <fail>
+  f0:	00301863          	bne	zero,gp,100 <pass>
+
+000000f4 <fail>:
+  f4:	00100e13          	li	t3,1
+  f8:	00200e93          	li	t4,2
+  fc:	0000006f          	j	fc <fail+0x8>
+
+00000100 <pass>:
+ 100:	00100e13          	li	t3,1
+ 104:	00100e93          	li	t4,1
+ 108:	0000006f          	j	108 <pass+0x8>
+
+0000010c <mtvec_handler>:
+ 10c:	00600293          	li	t0,6
+ 110:	34202373          	csrr	t1,mcause
+ 114:	fe6290e3          	bne	t0,t1,f4 <fail>
+ 118:	34179073          	csrw	mepc,a5
+ 11c:	30200073          	mret
+ 120:	c0001073          	unimp
+ 124:	0000                	unimp
+ 126:	0000                	unimp
+ 128:	0000                	unimp
+ 12a:	0000                	unimp
+ 12c:	0000                	unimp
+ 12e:	0000                	unimp
+ 130:	0000                	unimp
+ 132:	0000                	unimp
+ 134:	0000                	unimp
+ 136:	0000                	unimp
+ 138:	0000                	unimp
+ 13a:	0000                	unimp
+
+Disassembly of section .data:
+
+00000190 <begin_signature>:
+ 190:	0000                	unimp
+ 192:	0000                	unimp
+ 194:	0000                	unimp
+ 196:	0000                	unimp
+ 198:	0000                	unimp
+ 19a:	0000                	unimp
+ 19c:	0000                	unimp
+ 19e:	0000                	unimp

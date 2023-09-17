@@ -1,0 +1,107 @@
+
+generated/rv32mi-p-scall:     file format elf32-littleriscv
+
+
+Disassembly of section .text.init:
+
+00000000 <_start>:
+   0:	00000093          	li	ra,0
+   4:	00000113          	li	sp,0
+   8:	00000193          	li	gp,0
+   c:	00000213          	li	tp,0
+  10:	00000293          	li	t0,0
+  14:	00000313          	li	t1,0
+  18:	00000393          	li	t2,0
+  1c:	00000413          	li	s0,0
+  20:	00000493          	li	s1,0
+  24:	00000513          	li	a0,0
+  28:	00000593          	li	a1,0
+  2c:	00000613          	li	a2,0
+  30:	00000693          	li	a3,0
+  34:	00000713          	li	a4,0
+  38:	00000793          	li	a5,0
+  3c:	00000813          	li	a6,0
+  40:	00000893          	li	a7,0
+  44:	00000913          	li	s2,0
+  48:	00000993          	li	s3,0
+  4c:	00000a13          	li	s4,0
+  50:	00000a93          	li	s5,0
+  54:	00000b13          	li	s6,0
+  58:	00000b93          	li	s7,0
+  5c:	00000c13          	li	s8,0
+  60:	00000c93          	li	s9,0
+  64:	00000d13          	li	s10,0
+  68:	00000d93          	li	s11,0
+  6c:	00000e13          	li	t3,0
+  70:	00000e93          	li	t4,0
+  74:	00000f13          	li	t5,0
+  78:	00000f93          	li	t6,0
+  7c:	00000297          	auipc	t0,0x0
+  80:	07428293          	addi	t0,t0,116 # f0 <mtvec_handler>
+  84:	30529073          	csrw	mtvec,t0
+  88:	00200193          	li	gp,2
+  8c:	00800313          	li	t1,8
+  90:	000022b7          	lui	t0,0x2
+  94:	80028293          	addi	t0,t0,-2048 # 1800 <begin_signature+0x1630>
+  98:	3002b073          	csrc	mstatus,t0
+  9c:	300023f3          	csrr	t2,mstatus
+  a0:	0072f2b3          	and	t0,t0,t2
+  a4:	00028463          	beqz	t0,ac <_start+0xac>
+  a8:	00b00313          	li	t1,11
+  ac:	000022b7          	lui	t0,0x2
+  b0:	80028293          	addi	t0,t0,-2048 # 1800 <begin_signature+0x1630>
+  b4:	3002b073          	csrc	mstatus,t0
+  b8:	00000297          	auipc	t0,0x0
+  bc:	01028293          	addi	t0,t0,16 # c8 <_start+0xc8>
+  c0:	34129073          	csrw	mepc,t0
+  c4:	30200073          	mret
+  c8:	00100193          	li	gp,1
+
+000000cc <do_scall>:
+  cc:	00000073          	ecall
+  d0:	0080006f          	j	d8 <fail>
+  d4:	00301863          	bne	zero,gp,e4 <pass>
+
+000000d8 <fail>:
+  d8:	00100e13          	li	t3,1
+  dc:	00200e93          	li	t4,2
+  e0:	0000006f          	j	e0 <fail+0x8>
+
+000000e4 <pass>:
+  e4:	00100e13          	li	t3,1
+  e8:	00100e93          	li	t4,1
+  ec:	0000006f          	j	ec <pass+0x8>
+
+000000f0 <mtvec_handler>:
+  f0:	342022f3          	csrr	t0,mcause
+  f4:	305023f3          	csrr	t2,mtvec
+  f8:	0023f393          	andi	t2,t2,2
+  fc:	00038463          	beqz	t2,104 <skip_mask>
+ 100:	0ff2f293          	zext.b	t0,t0
+
+00000104 <skip_mask>:
+ 104:	fc629ae3          	bne	t0,t1,d8 <fail>
+ 108:	00000397          	auipc	t2,0x0
+ 10c:	fc438393          	addi	t2,t2,-60 # cc <do_scall>
+ 110:	341022f3          	csrr	t0,mepc
+ 114:	fc7292e3          	bne	t0,t2,d8 <fail>
+ 118:	fcdff06f          	j	e4 <pass>
+ 11c:	c0001073          	unimp
+ 120:	0000                	unimp
+ 122:	0000                	unimp
+ 124:	0000                	unimp
+ 126:	0000                	unimp
+ 128:	0000                	unimp
+ 12a:	0000                	unimp
+ 12c:	0000                	unimp
+ 12e:	0000                	unimp
+ 130:	0000                	unimp
+ 132:	0000                	unimp
+ 134:	0000                	unimp
+ 136:	0000                	unimp
+ 138:	0000                	unimp
+ 13a:	0000                	unimp
+ 13c:	0000                	unimp
+ 13e:	0000                	unimp
+ 140:	0000                	unimp
+ 142:	0000                	unimp

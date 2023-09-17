@@ -1,0 +1,90 @@
+
+generated/rv32mi-p-shamt:     file format elf32-littleriscv
+
+
+Disassembly of section .text.init:
+
+00000000 <_start>:
+   0:	00000093          	li	ra,0
+   4:	00000113          	li	sp,0
+   8:	00000193          	li	gp,0
+   c:	00000213          	li	tp,0
+  10:	00000293          	li	t0,0
+  14:	00000313          	li	t1,0
+  18:	00000393          	li	t2,0
+  1c:	00000413          	li	s0,0
+  20:	00000493          	li	s1,0
+  24:	00000513          	li	a0,0
+  28:	00000593          	li	a1,0
+  2c:	00000613          	li	a2,0
+  30:	00000693          	li	a3,0
+  34:	00000713          	li	a4,0
+  38:	00000793          	li	a5,0
+  3c:	00000813          	li	a6,0
+  40:	00000893          	li	a7,0
+  44:	00000913          	li	s2,0
+  48:	00000993          	li	s3,0
+  4c:	00000a13          	li	s4,0
+  50:	00000a93          	li	s5,0
+  54:	00000b13          	li	s6,0
+  58:	00000b93          	li	s7,0
+  5c:	00000c13          	li	s8,0
+  60:	00000c93          	li	s9,0
+  64:	00000d13          	li	s10,0
+  68:	00000d93          	li	s11,0
+  6c:	00000e13          	li	t3,0
+  70:	00000e93          	li	t4,0
+  74:	00000f13          	li	t5,0
+  78:	00000f93          	li	t6,0
+  7c:	00000297          	auipc	t0,0x0
+  80:	04c28293          	addi	t0,t0,76 # c8 <mtvec_handler>
+  84:	30529073          	csrw	mtvec,t0
+
+00000088 <test_2>:
+  88:	00200193          	li	gp,2
+  8c:	00100513          	li	a0,1
+  90:	01051513          	slli	a0,a0,0x10
+  94:	000103b7          	lui	t2,0x10
+  98:	00751c63          	bne	a0,t2,b0 <fail>
+
+0000009c <test_3>:
+  9c:	00300193          	li	gp,3
+  a0:	02051513          	slli	a0,a0,0x20
+  a4:	00100393          	li	t2,1
+  a8:	00701463          	bne	zero,t2,b0 <fail>
+  ac:	00301863          	bne	zero,gp,bc <pass>
+
+000000b0 <fail>:
+  b0:	00100e13          	li	t3,1
+  b4:	00200e93          	li	t4,2
+  b8:	0000006f          	j	b8 <fail+0x8>
+
+000000bc <pass>:
+  bc:	00100e13          	li	t3,1
+  c0:	00100e93          	li	t4,1
+  c4:	0000006f          	j	c4 <pass+0x8>
+
+000000c8 <mtvec_handler>:
+  c8:	00300293          	li	t0,3
+  cc:	fe5192e3          	bne	gp,t0,b0 <fail>
+  d0:	342022f3          	csrr	t0,mcause
+  d4:	00200313          	li	t1,2
+  d8:	fc629ce3          	bne	t0,t1,b0 <fail>
+  dc:	fe1ff06f          	j	bc <pass>
+  e0:	c0001073          	unimp
+  e4:	0000                	unimp
+  e6:	0000                	unimp
+  e8:	0000                	unimp
+  ea:	0000                	unimp
+  ec:	0000                	unimp
+  ee:	0000                	unimp
+  f0:	0000                	unimp
+  f2:	0000                	unimp
+  f4:	0000                	unimp
+  f6:	0000                	unimp
+  f8:	0000                	unimp
+  fa:	0000                	unimp
+  fc:	0000                	unimp
+  fe:	0000                	unimp
+ 100:	0000                	unimp
+ 102:	0000                	unimp

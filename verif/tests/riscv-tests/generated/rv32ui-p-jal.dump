@@ -36,59 +36,51 @@ Disassembly of section .text.init:
   70:	00000e93          	li	t4,0
   74:	00000f13          	li	t5,0
   78:	00000f93          	li	t6,0
+  7c:	00000293          	li	t0,0
+  80:	30529073          	csrw	mtvec,t0
 
-0000007c <test_2>:
-  7c:	00200193          	li	gp,2
-  80:	00000093          	li	ra,0
-  84:	0100026f          	jal	tp,94 <target_2>
+00000084 <test_2>:
+  84:	00200193          	li	gp,2
+  88:	00000093          	li	ra,0
+  8c:	0100026f          	jal	tp,9c <target_2>
 
-00000088 <linkaddr_2>:
-  88:	00000013          	nop
-  8c:	00000013          	nop
-  90:	0400006f          	j	d0 <fail>
+00000090 <linkaddr_2>:
+  90:	00000013          	nop
+  94:	00000013          	nop
+  98:	0400006f          	j	d8 <fail>
 
-00000094 <target_2>:
-  94:	00000117          	auipc	sp,0x0
-  98:	ff410113          	addi	sp,sp,-12 # 88 <linkaddr_2>
-  9c:	02411a63          	bne	sp,tp,d0 <fail>
+0000009c <target_2>:
+  9c:	00000117          	auipc	sp,0x0
+  a0:	ff410113          	addi	sp,sp,-12 # 90 <linkaddr_2>
+  a4:	02411a63          	bne	sp,tp,d8 <fail>
 
-000000a0 <test_3>:
-  a0:	00300193          	li	gp,3
-  a4:	00100093          	li	ra,1
-  a8:	0140006f          	j	bc <test_3+0x1c>
-  ac:	00108093          	addi	ra,ra,1
-  b0:	00108093          	addi	ra,ra,1
+000000a8 <test_3>:
+  a8:	00300193          	li	gp,3
+  ac:	00100093          	li	ra,1
+  b0:	0140006f          	j	c4 <test_3+0x1c>
   b4:	00108093          	addi	ra,ra,1
   b8:	00108093          	addi	ra,ra,1
   bc:	00108093          	addi	ra,ra,1
   c0:	00108093          	addi	ra,ra,1
-  c4:	00300393          	li	t2,3
-  c8:	00709463          	bne	ra,t2,d0 <fail>
-  cc:	00301863          	bne	zero,gp,dc <pass>
+  c4:	00108093          	addi	ra,ra,1
+  c8:	00108093          	addi	ra,ra,1
+  cc:	00300393          	li	t2,3
+  d0:	00709463          	bne	ra,t2,d8 <fail>
+  d4:	00301863          	bne	zero,gp,e4 <pass>
 
-000000d0 <fail>:
-  d0:	00100e13          	li	t3,1
-  d4:	00200e93          	li	t4,2
+000000d8 <fail>:
+  d8:	00100e13          	li	t3,1
+  dc:	00200e93          	li	t4,2
+  e0:	0000006f          	j	e0 <fail+0x8>
 
-000000d8 <fail_loop>:
-  d8:	0000006f          	j	d8 <fail_loop>
-
-000000dc <pass>:
-  dc:	00100e13          	li	t3,1
-  e0:	00100e93          	li	t4,1
-
-000000e4 <pass_loop>:
-  e4:	0000006f          	j	e4 <pass_loop>
-  e8:	c0001073          	unimp
-  ec:	0000                	unimp
-  ee:	0000                	unimp
-  f0:	0000                	unimp
-  f2:	0000                	unimp
+000000e4 <pass>:
+  e4:	00100e13          	li	t3,1
+  e8:	00100e93          	li	t4,1
+  ec:	0000006f          	j	ec <pass+0x8>
+  f0:	c0001073          	unimp
   f4:	0000                	unimp
   f6:	0000                	unimp
   f8:	0000                	unimp
   fa:	0000                	unimp
   fc:	0000                	unimp
   fe:	0000                	unimp
- 100:	0000                	unimp
- 102:	0000                	unimp

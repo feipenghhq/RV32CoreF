@@ -36,46 +36,40 @@ Disassembly of section .text.init:
   70:	00000e93          	li	t4,0
   74:	00000f13          	li	t5,0
   78:	00000f93          	li	t6,0
+  7c:	00000293          	li	t0,0
+  80:	30529073          	csrw	mtvec,t0
 
-0000007c <test_2>:
-  7c:	00200193          	li	gp,2
-  80:	00002517          	auipc	a0,0x2
-  84:	71c50513          	addi	a0,a0,1820 # 279c <begin_signature+0x264c>
-  88:	004005ef          	jal	a1,8c <test_2+0x10>
-  8c:	40b50533          	sub	a0,a0,a1
-  90:	000023b7          	lui	t2,0x2
-  94:	71038393          	addi	t2,t2,1808 # 2710 <begin_signature+0x25c0>
-  98:	02751463          	bne	a0,t2,c0 <fail>
+00000084 <test_2>:
+  84:	00200193          	li	gp,2
+  88:	00002517          	auipc	a0,0x2
+  8c:	71c50513          	addi	a0,a0,1820 # 27a4 <begin_signature+0x2654>
+  90:	004005ef          	jal	a1,94 <test_2+0x10>
+  94:	40b50533          	sub	a0,a0,a1
+  98:	000023b7          	lui	t2,0x2
+  9c:	71038393          	addi	t2,t2,1808 # 2710 <begin_signature+0x25c0>
+  a0:	02751463          	bne	a0,t2,c8 <fail>
 
-0000009c <test_3>:
-  9c:	00300193          	li	gp,3
-  a0:	ffffe517          	auipc	a0,0xffffe
-  a4:	8fc50513          	addi	a0,a0,-1796 # ffffd99c <begin_signature+0xffffd84c>
-  a8:	004005ef          	jal	a1,ac <test_3+0x10>
-  ac:	40b50533          	sub	a0,a0,a1
-  b0:	ffffe3b7          	lui	t2,0xffffe
-  b4:	8f038393          	addi	t2,t2,-1808 # ffffd8f0 <begin_signature+0xffffd7a0>
-  b8:	00751463          	bne	a0,t2,c0 <fail>
-  bc:	00301863          	bne	zero,gp,cc <pass>
+000000a4 <test_3>:
+  a4:	00300193          	li	gp,3
+  a8:	ffffe517          	auipc	a0,0xffffe
+  ac:	8fc50513          	addi	a0,a0,-1796 # ffffd9a4 <begin_signature+0xffffd854>
+  b0:	004005ef          	jal	a1,b4 <test_3+0x10>
+  b4:	40b50533          	sub	a0,a0,a1
+  b8:	ffffe3b7          	lui	t2,0xffffe
+  bc:	8f038393          	addi	t2,t2,-1808 # ffffd8f0 <begin_signature+0xffffd7a0>
+  c0:	00751463          	bne	a0,t2,c8 <fail>
+  c4:	00301863          	bne	zero,gp,d4 <pass>
 
-000000c0 <fail>:
-  c0:	00100e13          	li	t3,1
-  c4:	00200e93          	li	t4,2
+000000c8 <fail>:
+  c8:	00100e13          	li	t3,1
+  cc:	00200e93          	li	t4,2
+  d0:	0000006f          	j	d0 <fail+0x8>
 
-000000c8 <fail_loop>:
-  c8:	0000006f          	j	c8 <fail_loop>
-
-000000cc <pass>:
-  cc:	00100e13          	li	t3,1
-  d0:	00100e93          	li	t4,1
-
-000000d4 <pass_loop>:
-  d4:	0000006f          	j	d4 <pass_loop>
-  d8:	c0001073          	unimp
-  dc:	0000                	unimp
-  de:	0000                	unimp
-  e0:	0000                	unimp
-  e2:	0000                	unimp
+000000d4 <pass>:
+  d4:	00100e13          	li	t3,1
+  d8:	00100e93          	li	t4,1
+  dc:	0000006f          	j	dc <pass+0x8>
+  e0:	c0001073          	unimp
   e4:	0000                	unimp
   e6:	0000                	unimp
   e8:	0000                	unimp
@@ -86,5 +80,3 @@ Disassembly of section .text.init:
   f2:	0000                	unimp
   f4:	0000                	unimp
   f6:	0000                	unimp
-  f8:	0000                	unimp
-  fa:	0000                	unimp

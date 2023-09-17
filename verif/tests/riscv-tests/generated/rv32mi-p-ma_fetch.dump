@@ -1,0 +1,168 @@
+
+generated/rv32mi-p-ma_fetch:     file format elf32-littleriscv
+
+
+Disassembly of section .text.init:
+
+00000000 <_start>:
+   0:	00000093          	li	ra,0
+   4:	00000113          	li	sp,0
+   8:	00000193          	li	gp,0
+   c:	00000213          	li	tp,0
+  10:	00000293          	li	t0,0
+  14:	00000313          	li	t1,0
+  18:	00000393          	li	t2,0
+  1c:	00000413          	li	s0,0
+  20:	00000493          	li	s1,0
+  24:	00000513          	li	a0,0
+  28:	00000593          	li	a1,0
+  2c:	00000613          	li	a2,0
+  30:	00000693          	li	a3,0
+  34:	00000713          	li	a4,0
+  38:	00000793          	li	a5,0
+  3c:	00000813          	li	a6,0
+  40:	00000893          	li	a7,0
+  44:	00000913          	li	s2,0
+  48:	00000993          	li	s3,0
+  4c:	00000a13          	li	s4,0
+  50:	00000a93          	li	s5,0
+  54:	00000b13          	li	s6,0
+  58:	00000b93          	li	s7,0
+  5c:	00000c13          	li	s8,0
+  60:	00000c93          	li	s9,0
+  64:	00000d13          	li	s10,0
+  68:	00000d93          	li	s11,0
+  6c:	00000e13          	li	t3,0
+  70:	00000e93          	li	t4,0
+  74:	00000f13          	li	t5,0
+  78:	00000f93          	li	t6,0
+  7c:	00000297          	auipc	t0,0x0
+  80:	15c28293          	addi	t0,t0,348 # 1d8 <mtvec_handler>
+  84:	30529073          	csrw	mtvec,t0
+  88:	00200193          	li	gp,2
+  8c:	00000313          	li	t1,0
+  90:	00000297          	auipc	t0,0x0
+  94:	00c28293          	addi	t0,t0,12 # 9c <_start+0x9c>
+  98:	00228367          	jalr	t1,2(t0)
+  9c:	a011                	j	a0 <_start+0xa0>
+  9e:	a019                	j	a4 <_start+0xa4>
+  a0:	1200006f          	j	1c0 <fail>
+  a4:	00300193          	li	gp,3
+  a8:	00000297          	auipc	t0,0x0
+  ac:	00c28293          	addi	t0,t0,12 # b4 <_start+0xb4>
+  b0:	00128367          	jalr	t1,1(t0)
+  b4:	0080006f          	j	bc <_start+0xbc>
+  b8:	1080006f          	j	1c0 <fail>
+  bc:	00400193          	li	gp,4
+  c0:	00000313          	li	t1,0
+  c4:	00000297          	auipc	t0,0x0
+  c8:	00c28293          	addi	t0,t0,12 # d0 <_start+0xd0>
+  cc:	00328367          	jalr	t1,3(t0)
+  d0:	a011                	j	d4 <_start+0xd4>
+  d2:	a019                	j	d8 <_start+0xd8>
+  d4:	0ec0006f          	j	1c0 <fail>
+  d8:	00500193          	li	gp,5
+  dc:	00000313          	li	t1,0
+  e0:	00000297          	auipc	t0,0x0
+  e4:	00c28293          	addi	t0,t0,12 # ec <_start+0xec>
+  e8:	0060036f          	jal	t1,ee <_start+0xee>
+  ec:	a011                	j	f0 <_start+0xf0>
+  ee:	a019                	j	f4 <_start+0xf4>
+  f0:	0d00006f          	j	1c0 <fail>
+  f4:	00600193          	li	gp,6
+  f8:	00000313          	li	t1,0
+  fc:	00000297          	auipc	t0,0x0
+ 100:	00c28293          	addi	t0,t0,12 # 108 <_start+0x108>
+ 104:	00000363          	beqz	zero,10a <_start+0x10a>
+ 108:	a011                	j	10c <_start+0x10c>
+ 10a:	a019                	j	110 <_start+0x110>
+ 10c:	0b40006f          	j	1c0 <fail>
+ 110:	00700193          	li	gp,7
+ 114:	00001563          	bnez	zero,11e <_start+0x11e>
+ 118:	00c0006f          	j	124 <_start+0x124>
+ 11c:	a009                	j	11e <_start+0x11e>
+ 11e:	a009                	j	120 <_start+0x120>
+ 120:	0a00006f          	j	1c0 <fail>
+ 124:	30126073          	csrsi	misa,4
+ 128:	301023f3          	csrr	t2,misa
+ 12c:	0043f393          	andi	t2,t2,4
+ 130:	08038e63          	beqz	t2,1cc <pass>
+ 134:	30127073          	csrci	misa,4
+ 138:	301023f3          	csrr	t2,misa
+ 13c:	0043f393          	andi	t2,t2,4
+ 140:	08039663          	bnez	t2,1cc <pass>
+ 144:	305022f3          	csrr	t0,mtvec
+ 148:	00000317          	auipc	t1,0x0
+ 14c:	01630313          	addi	t1,t1,22 # 15e <_start+0x15e>
+ 150:	00230313          	addi	t1,t1,2
+ 154:	30531073          	csrw	mtvec,t1
+ 158:	0060006f          	j	15e <_start+0x15e>
+ 15c:	0001                	nop
+ 15e:	a0bd                	j	1cc <pass>
+ 160:	30529073          	csrw	mtvec,t0
+ 164:	30126073          	csrsi	misa,4
+ 168:	00800193          	li	gp,8
+ 16c:	301023f3          	csrr	t2,misa
+ 170:	0043f393          	andi	t2,t2,4
+ 174:	04038c63          	beqz	t2,1cc <pass>
+ 178:	0001                	nop
+ 17a:	30127073          	csrci	misa,4
+ 17e:	0001                	nop
+ 180:	301023f3          	csrr	t2,misa
+ 184:	0043f393          	andi	t2,t2,4
+ 188:	02038c63          	beqz	t2,1c0 <fail>
+ 18c:	00000297          	auipc	t0,0x0
+ 190:	02828293          	addi	t0,t0,40 # 1b4 <_start+0x1b4>
+ 194:	ffe28293          	addi	t0,t0,-2
+ 198:	34129073          	csrw	mepc,t0
+ 19c:	30127073          	csrci	misa,4
+ 1a0:	000023b7          	lui	t2,0x2
+ 1a4:	80038393          	addi	t2,t2,-2048 # 1800 <begin_signature+0x1530>
+ 1a8:	3003a073          	csrs	mstatus,t2
+ 1ac:	30200073          	mret
+ 1b0:	00000263          	beqz	zero,1b4 <_start+0x1b4>
+ 1b4:	30126073          	csrsi	misa,4
+ 1b8:	0140006f          	j	1cc <pass>
+ 1bc:	00301863          	bne	zero,gp,1cc <pass>
+
+000001c0 <fail>:
+ 1c0:	00100e13          	li	t3,1
+ 1c4:	00200e93          	li	t4,2
+ 1c8:	0000006f          	j	1c8 <fail+0x8>
+
+000001cc <pass>:
+ 1cc:	00100e13          	li	t3,1
+ 1d0:	00100e93          	li	t4,1
+ 1d4:	0000006f          	j	1d4 <pass+0x8>
+
+000001d8 <mtvec_handler>:
+ 1d8:	00200513          	li	a0,2
+ 1dc:	02a18063          	beq	gp,a0,1fc <mtvec_handler+0x24>
+ 1e0:	00400513          	li	a0,4
+ 1e4:	00a18c63          	beq	gp,a0,1fc <mtvec_handler+0x24>
+ 1e8:	00500513          	li	a0,5
+ 1ec:	00a18863          	beq	gp,a0,1fc <mtvec_handler+0x24>
+ 1f0:	00600513          	li	a0,6
+ 1f4:	00a18463          	beq	gp,a0,1fc <mtvec_handler+0x24>
+ 1f8:	fc9ff06f          	j	1c0 <fail>
+ 1fc:	fc0312e3          	bnez	t1,1c0 <fail>
+ 200:	00000593          	li	a1,0
+ 204:	34202573          	csrr	a0,mcause
+ 208:	fab51ce3          	bne	a0,a1,1c0 <fail>
+ 20c:	341025f3          	csrr	a1,mepc
+ 210:	00458593          	addi	a1,a1,4
+ 214:	fab296e3          	bne	t0,a1,1c0 <fail>
+ 218:	34302573          	csrr	a0,mtval
+ 21c:	00050663          	beqz	a0,228 <mtvec_handler+0x50>
+ 220:	ffe50513          	addi	a0,a0,-2
+ 224:	f8551ee3          	bne	a0,t0,1c0 <fail>
+ 228:	00858593          	addi	a1,a1,8
+ 22c:	34159073          	csrw	mepc,a1
+ 230:	30200073          	mret
+ 234:	c0001073          	unimp
+ 238:	0000                	unimp
+ 23a:	0000                	unimp
+ 23c:	0000                	unimp
+ 23e:	0000                	unimp
+ 240:	0000                	unimp
+ 242:	0000                	unimp

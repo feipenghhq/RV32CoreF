@@ -84,29 +84,27 @@ make
 
    ```
    // Test environment
-   riscv-tests/isa/Makefile 		-> tests/riscv-tests/Makefile
-   riscv-tests/env/p/riscv-tests.h -> tests/riscv-tests/riscv-tests.h
-   riscv-tests/env/p/link.ld 		-> tests/riscv-tests/link.ld
-   /riscv-tests/isa/macros/scalar/test_macros.h -> tests/riscv-tests/test_macros.h
+   riscv-tests/isa/Makefile 					-> tests/riscv-tests/Makefile
+   riscv-tests/env/p/riscv-tests.h 			-> tests/riscv-tests/riscv-tests.h
+   riscv-tests/env/p/link.ld 					-> tests/riscv-tests/link.ld
+   riscv-tests/isa/macros/scalar/test_macros.h -> tests/riscv-tests/test_macros.h
    
-   // Test case
-   riscv-tests/isa/rv64ui 			-> tests/riscv-tests/rv32ui
+   // Test case: Copied the following test case
+   rv32ui/rv64ui
+   	- Removed ma_data.S test because misaligned access not supported in HW
+   
    ```
 
-2. Updated the original Makefile and the Makefrag file in rv32ui folder
+2. Updated the original Makefile
 
 3. Update the link.ld file.
-
-4. Removed all the rv64 related instruction from the rv32ui folder
 
 5. Modified riscv_test.h
    1. Updated RVTEST_CODE_BEGIN macro
    2. Updated RVTEST_PASS and RVTEST_FAIL macro
 
-   Please check the file itself to see details.
+   
 
-   
-   
 
 
 ## riscv-arch-tests

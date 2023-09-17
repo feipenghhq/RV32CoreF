@@ -3,7 +3,7 @@
 #ifndef _ENV_PHYSICAL_SINGLE_CORE_H
 #define _ENV_PHYSICAL_SINGLE_CORE_H
 
-//#include "../encoding.h"
+#include "encoding.h"
 
 //-----------------------------------------------------------------------
 // Begin Macro
@@ -168,14 +168,17 @@
 //Note: Modified the RVTEST_CODE_BEGIN
 // Commented out everything below the _start: session and added register initialization
 
-#define RVTEST_CODE_BEGIN                                               \
-        .section .text.init;                                            \
-        .align  6;                                                      \
-        .weak stvec_handler;                                            \
-        .weak mtvec_handler;                                            \
-        .globl _start;                                                  \
-_start:                                                                 \
-        INIT_XREG;                                                      \
+#define RVTEST_CODE_BEGIN     \
+        .section .text.init;  \
+        .align  6;            \
+        .weak stvec_handler;  \
+        .weak mtvec_handler;  \
+        .globl _start;        \
+_start:                       \
+        INIT_XREG;            \
+        .weak  mtvec_handler; \
+        la t0, mtvec_handler; \
+        csrw	 mtvec,t0;      \
 
 //#define RVTEST_CODE_BEGIN                                               \
 //        .section .text.init;                                            \
@@ -258,18 +261,19 @@ _start:                                                                 \
 
 // Modified the PASS/FAIL macro
 
-#define RVTEST_PASS                                                     \
-        li x28, 1;                                                      \
-        li x29, 1;                                                      \
-pass_loop:                                                              \
-        j pass_loop
+#define RVTEST_PASS \
+        li x28, 1;  \
+        li x29, 1;  \
+1:                  \
+        j 1b
 
 #define TESTNUM gp
-#define RVTEST_FAIL                                                     \
-        li x28, 1;                                                      \
-        li x29, 2;                                                      \
-fail_loop:                                                              \
-        j fail_loop
+
+#define RVTEST_FAIL \
+        li x28, 1;  \
+        li x29, 2;  \
+1:                  \
+        j 1b
 
 //#define RVTEST_PASS                                                     \
 //        fence;                                                          \

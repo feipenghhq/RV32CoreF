@@ -1,0 +1,135 @@
+
+generated/rv32mi-p-lw-misaligned:     file format elf32-littleriscv
+
+
+Disassembly of section .text.init:
+
+00000000 <_start>:
+   0:	00000093          	li	ra,0
+   4:	00000113          	li	sp,0
+   8:	00000193          	li	gp,0
+   c:	00000213          	li	tp,0
+  10:	00000293          	li	t0,0
+  14:	00000313          	li	t1,0
+  18:	00000393          	li	t2,0
+  1c:	00000413          	li	s0,0
+  20:	00000493          	li	s1,0
+  24:	00000513          	li	a0,0
+  28:	00000593          	li	a1,0
+  2c:	00000613          	li	a2,0
+  30:	00000693          	li	a3,0
+  34:	00000713          	li	a4,0
+  38:	00000793          	li	a5,0
+  3c:	00000813          	li	a6,0
+  40:	00000893          	li	a7,0
+  44:	00000913          	li	s2,0
+  48:	00000993          	li	s3,0
+  4c:	00000a13          	li	s4,0
+  50:	00000a93          	li	s5,0
+  54:	00000b13          	li	s6,0
+  58:	00000b93          	li	s7,0
+  5c:	00000c13          	li	s8,0
+  60:	00000c93          	li	s9,0
+  64:	00000d13          	li	s10,0
+  68:	00000d93          	li	s11,0
+  6c:	00000e13          	li	t3,0
+  70:	00000e93          	li	t4,0
+  74:	00000f13          	li	t5,0
+  78:	00000f93          	li	t6,0
+  7c:	00000297          	auipc	t0,0x0
+  80:	0a828293          	addi	t0,t0,168 # 124 <mtvec_handler>
+  84:	30529073          	csrw	mtvec,t0
+
+00000088 <test_2>:
+  88:	00200193          	li	gp,2
+  8c:	040307b7          	lui	a5,0x4030
+  90:	20178793          	addi	a5,a5,513 # 4030201 <_end+0x4030021>
+  94:	1d000093          	li	ra,464
+  98:	0000a703          	lw	a4,0(ra)
+  9c:	040303b7          	lui	t2,0x4030
+  a0:	20138393          	addi	t2,t2,513 # 4030201 <_end+0x4030021>
+  a4:	06771463          	bne	a4,t2,10c <fail>
+
+000000a8 <test_3>:
+  a8:	00300193          	li	gp,3
+  ac:	050407b7          	lui	a5,0x5040
+  b0:	30278793          	addi	a5,a5,770 # 5040302 <_end+0x5040122>
+  b4:	1d000093          	li	ra,464
+  b8:	0010a703          	lw	a4,1(ra)
+  bc:	050403b7          	lui	t2,0x5040
+  c0:	30238393          	addi	t2,t2,770 # 5040302 <_end+0x5040122>
+  c4:	04771463          	bne	a4,t2,10c <fail>
+
+000000c8 <test_4>:
+  c8:	00400193          	li	gp,4
+  cc:	060507b7          	lui	a5,0x6050
+  d0:	40378793          	addi	a5,a5,1027 # 6050403 <_end+0x6050223>
+  d4:	1d000093          	li	ra,464
+  d8:	0020a703          	lw	a4,2(ra)
+  dc:	060503b7          	lui	t2,0x6050
+  e0:	40338393          	addi	t2,t2,1027 # 6050403 <_end+0x6050223>
+  e4:	02771463          	bne	a4,t2,10c <fail>
+
+000000e8 <test_5>:
+  e8:	00500193          	li	gp,5
+  ec:	070607b7          	lui	a5,0x7060
+  f0:	50478793          	addi	a5,a5,1284 # 7060504 <_end+0x7060324>
+  f4:	1d000093          	li	ra,464
+  f8:	0030a703          	lw	a4,3(ra)
+  fc:	070603b7          	lui	t2,0x7060
+ 100:	50438393          	addi	t2,t2,1284 # 7060504 <_end+0x7060324>
+ 104:	00771463          	bne	a4,t2,10c <fail>
+ 108:	00301863          	bne	zero,gp,118 <pass>
+
+0000010c <fail>:
+ 10c:	00100e13          	li	t3,1
+ 110:	00200e93          	li	t4,2
+ 114:	0000006f          	j	114 <fail+0x8>
+
+00000118 <pass>:
+ 118:	00100e13          	li	t3,1
+ 11c:	00100e93          	li	t4,1
+ 120:	0000006f          	j	120 <pass+0x8>
+
+00000124 <mtvec_handler>:
+ 124:	00400293          	li	t0,4
+ 128:	34202373          	csrr	t1,mcause
+ 12c:	fe6290e3          	bne	t0,t1,10c <fail>
+ 130:	00078713          	mv	a4,a5
+ 134:	341022f3          	csrr	t0,mepc
+ 138:	00428293          	addi	t0,t0,4
+ 13c:	34129073          	csrw	mepc,t0
+ 140:	30200073          	mret
+ 144:	c0001073          	unimp
+ 148:	0000                	unimp
+ 14a:	0000                	unimp
+ 14c:	0000                	unimp
+ 14e:	0000                	unimp
+ 150:	0000                	unimp
+ 152:	0000                	unimp
+ 154:	0000                	unimp
+ 156:	0000                	unimp
+ 158:	0000                	unimp
+ 15a:	0000                	unimp
+ 15c:	0000                	unimp
+ 15e:	0000                	unimp
+ 160:	0000                	unimp
+ 162:	0000                	unimp
+ 164:	0000                	unimp
+ 166:	0000                	unimp
+ 168:	0000                	unimp
+ 16a:	0000                	unimp
+ 16c:	0000                	unimp
+ 16e:	0000                	unimp
+ 170:	0000                	unimp
+ 172:	0000                	unimp
+
+Disassembly of section .data:
+
+000001d0 <begin_signature>:
+ 1d0:	0201                	addi	tp,tp,0
+ 1d2:	06050403          	lb	s0,96(a0)
+ 1d6:	00000807          	vle8.v	v16,(zero),v0.t
+ 1da:	0000                	unimp
+ 1dc:	0000                	unimp
+ 1de:	0000                	unimp

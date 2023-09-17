@@ -36,16 +36,12 @@ Disassembly of section .text.init:
   70:	00000e93          	li	t4,0
   74:	00000f13          	li	t5,0
   78:	00000f93          	li	t6,0
-  7c:	00100e13          	li	t3,1
-  80:	00100e93          	li	t4,1
-
-00000084 <pass_loop>:
-  84:	0000006f          	j	84 <pass_loop>
-  88:	c0001073          	unimp
-  8c:	0000                	unimp
-  8e:	0000                	unimp
-  90:	0000                	unimp
-  92:	0000                	unimp
+  7c:	00000293          	li	t0,0
+  80:	30529073          	csrw	mtvec,t0
+  84:	00100e13          	li	t3,1
+  88:	00100e93          	li	t4,1
+  8c:	0000006f          	j	8c <_start+0x8c>
+  90:	c0001073          	unimp
   94:	0000                	unimp
   96:	0000                	unimp
   98:	0000                	unimp
@@ -68,5 +64,3 @@ Disassembly of section .text.init:
   ba:	0000                	unimp
   bc:	0000                	unimp
   be:	0000                	unimp
-  c0:	0000                	unimp
-  c2:	0000                	unimp

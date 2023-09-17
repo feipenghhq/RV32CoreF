@@ -7,6 +7,7 @@ XLEN ?= 32
 src_dir := .
 
 include $(src_dir)/rv32ui/Makefrag
+include $(src_dir)/rv32mi/Makefrag
 
 default: all
 
@@ -44,6 +45,7 @@ tests += $$($(1)_tests)
 endef
 
 $(eval $(call compile_template,rv32ui,-march=rv32i -mabi=ilp32))
+$(eval $(call compile_template,rv32mi,-march=rv32i -mabi=ilp32))
 
 tests_dump = $(addsuffix .dump, $(tests))
 tests_hex = $(addsuffix .hex, $(tests))

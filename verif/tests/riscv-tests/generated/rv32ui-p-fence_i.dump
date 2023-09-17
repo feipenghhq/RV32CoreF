@@ -36,11 +36,11 @@ Disassembly of section .text.init:
   70:	00000e93          	li	t4,0
   74:	00000f13          	li	t5,0
   78:	00000f93          	li	t6,0
-  7c:	06f00693          	li	a3,111
-  80:	1d001503          	lh	a0,464(zero) # 1d0 <begin_signature>
-  84:	1d201583          	lh	a1,466(zero) # 1d2 <begin_signature+0x2>
-  88:	00000013          	nop
-  8c:	00000013          	nop
+  7c:	00000293          	li	t0,0
+  80:	30529073          	csrw	mtvec,t0
+  84:	06f00693          	li	a3,111
+  88:	1d001503          	lh	a0,464(zero) # 1d0 <begin_signature>
+  8c:	1d201583          	lh	a1,466(zero) # 1d2 <begin_signature+0x2>
   90:	00000013          	nop
   94:	00000013          	nop
   98:	00000013          	nop
@@ -84,16 +84,12 @@ Disassembly of section .text.init:
 0000011c <fail>:
  11c:	00100e13          	li	t3,1
  120:	00200e93          	li	t4,2
-
-00000124 <fail_loop>:
- 124:	0000006f          	j	124 <fail_loop>
+ 124:	0000006f          	j	124 <fail+0x8>
 
 00000128 <pass>:
  128:	00100e13          	li	t3,1
  12c:	00100e93          	li	t4,1
-
-00000130 <pass_loop>:
- 130:	0000006f          	j	130 <pass_loop>
+ 130:	0000006f          	j	130 <pass+0x8>
  134:	c0001073          	unimp
  138:	0000                	unimp
  13a:	0000                	unimp
@@ -113,12 +109,6 @@ Disassembly of section .text.init:
  156:	0000                	unimp
  158:	0000                	unimp
  15a:	0000                	unimp
- 15c:	0000                	unimp
- 15e:	0000                	unimp
- 160:	0000                	unimp
- 162:	0000                	unimp
- 164:	0000                	unimp
- 166:	0000                	unimp
 
 Disassembly of section .data:
 
