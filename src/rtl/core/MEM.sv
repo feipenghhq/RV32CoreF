@@ -14,7 +14,7 @@
 `include "config.svh"
 
 module MEM #(
-    parameter ISA_ZICSR = 1,
+    parameter SUPPORT_ZICSR = 1,
     parameter SUPPORT_TRAP = 1
 ) (
     input  logic                        clk,
@@ -38,6 +38,7 @@ module MEM #(
     input  logic                        mem_pipe_csr_read,
     input  logic [`XLEN-1:0]            mem_pipe_csr_info,
     input  logic [11:0]                 mem_pipe_csr_addr,
+    input  logic                        mem_pipe_mret,
     input  logic                        mem_pipe_exc_pending,
     input  logic [3:0]                  mem_pipe_exc_code,
     input  logic [`XLEN-1:0]            mem_pipe_exc_tval,
@@ -57,6 +58,7 @@ module MEM #(
     output logic                        wb_pipe_csr_read,
     output logic [`XLEN-1:0]            wb_pipe_csr_info,
     output logic [11:0]                 wb_pipe_csr_addr,
+    output logic                        wb_pipe_mret,
     output logic                        wb_pipe_exc_pending,
     output logic [3:0]                  wb_pipe_exc_code,
     output logic [`XLEN-1:0]            wb_pipe_exc_tval,
@@ -128,7 +130,7 @@ module MEM #(
 
     // CSR
     generate
-    if (ISA_ZICSR) begin: gen_csr_pipe
+    if (SUPPORT_ZICSR) begin: gen_csr_pipe
         always @(posedge clk) begin
             if (wb_pipe_ready & mem_req) begin
                 wb_pipe_csr_write <= mem_pipe_csr_write;
@@ -155,6 +157,7 @@ module MEM #(
     if (SUPPORT_TRAP) begin: gen_trap_pipe
         always @(posedge clk) begin
             if (wb_pipe_ready & mem_req) begin
+                wb_pipe_mret <= mem_pipe_mret;
                 wb_pipe_exc_pending <= mem_pipe_exc_pending;
                 wb_pipe_exc_code <= mem_pipe_exc_code;
                 wb_pipe_exc_interrupt <= mem_pipe_exc_interrupt;
@@ -162,6 +165,7 @@ module MEM #(
         end
     end
     else begin: no_trap_pipe
+        assign wb_pipe_mret = 1'b0;
         assign wb_pipe_exc_pending = 1'b0;
         assign wb_pipe_exc_code = 4'b0;
         assign wb_pipe_exc_interrupt = 1'b0;

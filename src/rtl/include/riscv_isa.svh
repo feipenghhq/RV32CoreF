@@ -10,6 +10,9 @@
  * ------------------------------------------------------------------------------------------------
  */
 
+`ifndef __RISCV_ISA__
+`define __RISCV_ISA__
+
 // RV32I Instruction Set
 `define RV32I_OPCODE_LUI       5'b01101
 `define RV32I_OPCODE_AUIPC     5'b00101
@@ -20,8 +23,8 @@
 `define RV32I_OPCODE_BRANCH    5'b11000
 `define RV32I_OPCODE_LOAD      5'b00000
 `define RV32I_OPCODE_STORE     5'b01000
-`define RV32I_OPCODE_CSR       5'b11100
 `define RV32I_OPCODE_FENCE     5'b00011
+`define RV32I_OPCODE_SYSTEM    5'b11100
 
 `define RV32I_FUNC3_ADD     3'b000
 `define RV32I_FUNC3_SUB     3'b000
@@ -69,3 +72,5 @@
 `define M_SOFTWARE_INTERRUPT    4'd3
 `define M_TIMER_INTERRUPT       4'd7
 `define M_EXTERNAL_INTERRUPT    4'd11
+
+`endif

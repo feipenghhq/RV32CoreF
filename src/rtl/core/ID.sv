@@ -15,7 +15,7 @@
 `include "riscv_isa.svh"
 
 module ID #(
-    parameter ISA_ZICSR = 1,
+    parameter SUPPORT_ZICSR = 1,
     parameter SUPPORT_TRAP = 1
 ) (
     input  logic                        clk,
@@ -52,6 +52,7 @@ module ID #(
     output logic                        ex_pipe_csr_clear,
     output logic                        ex_pipe_csr_read,
     output logic [11:0]                 ex_pipe_csr_addr,
+    output logic                        ex_pipe_mret,
     output logic                        ex_pipe_exc_pending,
     output logic [3:0]                  ex_pipe_exc_code,
     output logic                        ex_pipe_exc_interrupt,
@@ -110,6 +111,7 @@ module ID #(
     logic                           dec_csr_clear;
     logic                           dec_csr_read;
     logic [11:0]                    dec_csr_addr;
+    logic                           dec_mret;
     logic                           dec_illegal_instr;
 
     // Forward logic
@@ -172,7 +174,7 @@ module ID #(
 
     // CSR
     generate
-    if (ISA_ZICSR) begin: gen_csr_pipe
+    if (SUPPORT_ZICSR) begin: gen_csr_pipe
         always @(posedge clk) begin
             if (ex_pipe_ready & id_req) begin
                 ex_pipe_csr_write <= dec_csr_write & ~exception_pending;
@@ -197,6 +199,7 @@ module ID #(
     if (SUPPORT_TRAP) begin: gen_trap_pipe
         always @(posedge clk) begin
             if (ex_pipe_ready & id_req) begin
+                ex_pipe_mret <= dec_mret;
                 // Some note about ex_pipe_exc_pending
                 // 1. Flush from downstream stage will flush both exception and interrupt.
                 //    For interrupt, it will be logged by the next valid instruction after flusing.
@@ -211,6 +214,7 @@ module ID #(
         end
     end
     else begin: no_trap_pipe
+        assign ex_pipe_mret = 1'b0;
         assign ex_pipe_exc_pending = 1'b0;
         assign ex_pipe_exc_code = 4'b0;
         assign ex_pipe_exc_interrupt = 1'b0;
@@ -276,7 +280,7 @@ module ID #(
         .*);
 
     decoder #(
-        .ISA_ZICSR(ISA_ZICSR)
+        .SUPPORT_ZICSR(SUPPORT_ZICSR)
     ) u_decoder(
         .instruction(id_pipe_instruction),
         .*);

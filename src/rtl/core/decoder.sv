@@ -19,7 +19,7 @@
 `include "riscv_isa.svh"
 
 module decoder #(
-    parameter ISA_ZICSR = 1,
+    parameter SUPPORT_ZICSR = 1,
     parameter SUPPORT_TRAP = 1
 ) (
     input logic [`XLEN-1:0]             instruction,
@@ -46,6 +46,7 @@ module decoder #(
     output logic                        dec_csr_clear,      // csrrc/csrrci
     output logic                        dec_csr_read,       // csr read
     output logic [11:0]                 dec_csr_addr,       // csr address
+    output logic                        dec_mret,
     output logic                        dec_illegal_instr   // invalid instruction
 );
 
@@ -81,6 +82,7 @@ module decoder #(
 
     logic rv32i_funct7_eq_0x0;
     logic rv32i_funct7_eq_0x20;
+    logic rv32i_funct7_eq_0x8;
 
     // Instruction opcode
     logic is_add;
@@ -93,6 +95,7 @@ module decoder #(
     logic is_sra;
     logic is_or;
     logic is_and;
+    logic is_system;
     logic is_csr;
     logic is_fence;
 
@@ -118,7 +121,7 @@ module decoder #(
     logic invalid_load;
     logic invalid_store;
     logic invalid_itype_rtype;
-    logic invalid_system; // invalid system type: opcode = 7'h1110011
+    logic invalid_system;
 
     // [Optional] CSR
     logic is_csrrw; // csrrw/csrrwi
@@ -128,6 +131,9 @@ module decoder #(
     logic csrrw_read;
     logic csrrs_write;
     logic csrrc_write;
+
+    // [Optional] RET (mret/sret)
+    logic is_mret;
 
     // -------------------------------------------
     // Extract Each field from Instruction
@@ -160,10 +166,13 @@ module decoder #(
     assign is_branch = (rv32i_opcode == `RV32I_OPCODE_BRANCH);
     assign is_itype = phase3 & (rv32i_opcode == `RV32I_OPCODE_ITYPE);
     assign is_rtype = phase3 & (rv32i_opcode == `RV32I_OPCODE_RTYPE);
+    assign is_system = (rv32i_opcode == `RV32I_OPCODE_SYSTEM);
+    assign is_csr   = is_system;
 
     // Funct7
     assign rv32i_funct7_eq_0x0  = (rv32i_funct7 == 7'h00);
     assign rv32i_funct7_eq_0x20 = (rv32i_funct7 == 7'h20);
+    assign rv32i_funct7_eq_0x8  = (rv32i_funct7 == 7'h08);
 
     // itype and rtype decode
     assign is_slt  = (rv32i_funct3 == `RV32I_FUNC3_SLT)  & (is_itype | (is_rtype & rv32i_funct7_eq_0x0));
@@ -191,6 +200,16 @@ module decoder #(
     assign is_bltu = is_branch & (rv32i_funct3 == `RV32I_FUNC3_BLTU);
     assign is_bgeu = is_branch & (rv32i_funct3 == `RV32I_FUNC3_BGEU);
     assign branch_is_unsigned = is_branch & rv32i_funct3[1];
+
+    generate
+    if (SUPPORT_TRAP) begin: gen_ret
+        assign is_mret = is_system & (rv32i_funct3 == 0) & rv32i_funct7_eq_0x8
+                                   & (dec_rd_addr == 0)  & (dec_rs2_addr == 0);
+    end
+    else begin: no_ret
+        assign is_mret = 1'b0;
+    end
+    endgenerate
 
     // -------------------------------------------
     // Control signal generation
@@ -237,6 +256,8 @@ module decoder #(
 
     assign dec_unsign = load_is_unsigned | branch_is_unsigned;
 
+    assign dec_mret = is_mret;
+
     assign is_i_type_imm = is_jalr | is_itype | is_load;
     assign is_u_type_imm = is_lui | is_auipc;
     assign is_j_type_imm = is_jal;
@@ -258,12 +279,11 @@ module decoder #(
 
     // CSR
     generate
-    if (ISA_ZICSR) begin: gen_ISA_ZICSR
+    if (SUPPORT_ZICSR) begin: gen_ISA_ZICSR
         assign csrrw_read  = |dec_rd_addr;  // csrrw/csrrwi should not read CSR if rd = x0
         assign csrrs_write = |dec_rs1_addr; // csrrs/csrrsi should not write CSR if rs1 = x0 (uimm = 0)
         assign csrrc_write = csrrs_write;   // same condition as csrrs/csrrsi
 
-        assign is_csr   = (rv32i_opcode == `RV32I_OPCODE_CSR);
         assign is_csrrw = is_csr & (rv32i_funct3[1:0] == 2'b00);
         assign is_csrrs = is_csr & (rv32i_funct3[1:0] == 2'b10);
         assign is_csrrc = is_csr & (rv32i_funct3[1:0] == 2'b11);
@@ -296,8 +316,9 @@ module decoder #(
     // Illegal Instruction
     generate
     if (SUPPORT_TRAP) begin: gen_exception
-        assign invalid_opcode = ~(is_lui | is_auipc | is_rtype | is_jalr | is_itype |
-                                  is_jal | is_fence | is_store | is_load | is_branch);
+        assign invalid_opcode = ~(is_lui | is_auipc | is_rtype | is_jalr | is_itype  |
+                                  is_jal | is_fence | is_store | is_load | is_branch |
+                                  ((SUPPORT_ZICSR | SUPPORT_TRAP) & is_system));
         assign invalid_jalr = is_jalr & (|rv32i_funct3); // For JALR funct = 0
         assign invalid_bxx = is_branch & (rv32i_funct3[2:1] == 2'b01);
         assign invalid_load = is_load & ((rv32i_funct3[2:1] == 2'b11 ) | (rv32i_funct3[1:0]==2'b11));
@@ -305,8 +326,10 @@ module decoder #(
         assign invalid_itype_rtype = (is_itype | is_rtype) &
                                     ~(is_slt | is_sltu | is_xor | is_or  | is_and |
                                       is_add | is_srl  | is_sra | is_sll | is_sub);
-        assign invalid_system = ISA_ZICSR & is_csr &
-                                ((rv32i_funct3 == 3'b000) | (rv32i_funct3 == 3'b100)); // For now, we only support CSR as system instruction
+        assign invalid_system = is_system & (
+                                            ~is_mret |
+                                            SUPPORT_ZICSR & ~(is_csrrw | is_csrrs | is_csrrc)
+                                            );
         assign dec_illegal_instr = invalid_opcode | invalid_jalr   | invalid_bxx | invalid_load |
                                     invalid_store | invalid_system | invalid_itype_rtype;
     end
@@ -317,6 +340,7 @@ module decoder #(
         assign invalid_load = 1'b0;
         assign invalid_store = 1'b0;
         assign invalid_itype_rtype = 1'b0;
+        assign invalid_system = 1'b0;
         assign dec_illegal_instr = 1'b0;
     end
     endgenerate

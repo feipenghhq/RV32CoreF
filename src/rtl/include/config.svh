@@ -10,8 +10,8 @@
  * ------------------------------------------------------------------------------------------------
  */
 
-`ifndef __RVCOREF_CONFIG__
-`define __RVCOREF_CONFIG__
+`ifndef __RV32COREF_CONFIG__
+`define __RV32COREF_CONFIG__
 
 // CPU Width
 `define XLEN            32

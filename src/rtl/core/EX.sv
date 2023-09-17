@@ -15,7 +15,7 @@
 `include "riscv_isa.svh"
 
 module EX #(
-    parameter ISA_ZICSR = 1,
+    parameter SUPPORT_ZICSR = 1,
     parameter SUPPORT_TRAP = 1
 ) (
     input  logic                        clk,
@@ -46,6 +46,7 @@ module EX #(
     input  logic                        ex_pipe_csr_clear,
     input  logic                        ex_pipe_csr_read,
     input  logic [11:0]                 ex_pipe_csr_addr,
+    input  logic                        ex_pipe_mret,
     input  logic                        ex_pipe_exc_pending,
     input  logic [3:0]                  ex_pipe_exc_code,
     input  logic                        ex_pipe_exc_interrupt,
@@ -68,6 +69,7 @@ module EX #(
     output logic                        mem_pipe_csr_read,
     output logic [`XLEN-1:0]            mem_pipe_csr_info,
     output logic [11:0]                 mem_pipe_csr_addr,
+    output logic                        mem_pipe_mret,
     output logic                        mem_pipe_exc_pending,
     output logic [3:0]                  mem_pipe_exc_code,
     output logic [`XLEN-1:0]            mem_pipe_exc_tval,
@@ -168,7 +170,7 @@ module EX #(
 
     // CSR
     generate
-    if (ISA_ZICSR) begin: gen_csr_pipe
+    if (SUPPORT_ZICSR) begin: gen_csr_pipe
         always @(posedge clk) begin
             if (mem_pipe_ready & ex_req) begin
                 mem_pipe_csr_write <= ex_pipe_csr_write;
@@ -195,6 +197,7 @@ module EX #(
     if (SUPPORT_TRAP) begin: gen_trap_pipe
         always @(posedge clk) begin
             if (mem_pipe_ready & ex_req) begin
+                mem_pipe_mret <= ex_pipe_mret;
                 mem_pipe_exc_pending <= ex_pipe_exc_pending | exception_pending;
                 mem_pipe_exc_code <= ex_pipe_exc_pending ? ex_pipe_exc_code : exception_code;
                 mem_pipe_exc_tval <= dram_addr;
@@ -203,6 +206,7 @@ module EX #(
         end
     end
     else begin: no_trap_pipe
+        assign mem_pipe_mret = 1'b0;
         assign mem_pipe_exc_pending = 1'b0;
         assign mem_pipe_exc_code = 4'b0;
         assign mem_pipe_exc_tval = `XLEN'b0;

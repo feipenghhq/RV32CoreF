@@ -26,6 +26,9 @@ module IF #(
     // EX --> IF
     input  logic                ex_branch,       // jump and taken branch
     input  logic [`XLEN-1:0]    ex_branch_pc,    // target pc
+    // WB --> IF
+    input  logic                wb_trap,
+    input  logic [`XLEN-1:0]    wb_trap_pc,
     // Instruction RAM Access
     output logic                iram_req,
     output logic                iram_write,
@@ -118,7 +121,8 @@ module IF #(
     // -------------------------------------------
 
     assign pc_val = pc;
-    assign next_pc = ex_branch ? ex_branch_pc : pc + `XLEN'h4;
+    assign next_pc = wb_trap   ? wb_trap_pc :
+                     ex_branch ? ex_branch_pc : pc + `XLEN'h4;
     assign branch_pc_minus4 = ex_branch_pc - `XLEN'h4;
 
     always @(posedge clk) begin
@@ -176,11 +180,6 @@ module IF #(
             else if (flush_next_data & iram_rvalid) flush_next_data <= 1'b0;
         end
     end
-
-
-    // -------------------------------------------
-    // Assertion
-    // -------------------------------------------
 
 
     // -------------------------------------------

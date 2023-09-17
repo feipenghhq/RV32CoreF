@@ -15,7 +15,7 @@
 
 module core #(
     parameter PC_RESET_ADDR = `XLEN'h0,
-    parameter ISA_ZICSR = 1,        // Support Zicsr instruction sets
+    parameter SUPPORT_ZICSR = 1,        // Support Zicsr instruction sets
     parameter SUPPORT_TRAP = 1      // Support exception and interrupt
 ) (
     input  logic                clk,
@@ -81,6 +81,7 @@ module core #(
     logic                           ex_pipe_csr_clear;
     logic                           ex_pipe_csr_read;
     logic [11:0]                    ex_pipe_csr_addr;
+    logic                           ex_pipe_mret;
     logic                           ex_pipe_exc_pending;
     logic [3:0]                     ex_pipe_exc_code;
     logic                           ex_pipe_exc_interrupt;
@@ -103,6 +104,7 @@ module core #(
     logic                           mem_pipe_csr_read;
     logic [`XLEN-1:0]               mem_pipe_csr_info;
     logic [11:0]                    mem_pipe_csr_addr;
+    logic                           mem_pipe_mret;
     logic                           mem_pipe_exc_pending;
     logic [3:0]                     mem_pipe_exc_code;
     logic [`XLEN-1:0]               mem_pipe_exc_tval;
@@ -122,6 +124,7 @@ module core #(
     logic                           wb_pipe_csr_read;
     logic [`XLEN-1:0]               wb_pipe_csr_info;
     logic [11:0]                    wb_pipe_csr_addr;
+    logic                           wb_pipe_mret;
     logic                           wb_pipe_exc_pending;
     logic [3:0]                     wb_pipe_exc_code;
     logic [`XLEN-1:0]               wb_pipe_exc_tval;
@@ -141,6 +144,8 @@ module core #(
     logic                           wb_rd_write;
     logic [`XLEN-1:0]               wb_rd_wdata;
     logic [`REG_AW-1:0]             wb_rd_addr;
+    logic                           wb_trap;
+    logic [`XLEN-1:0]               wb_trap_pc;
     // MISC
     logic                           interrupt_req;
 
@@ -159,7 +164,7 @@ module core #(
     ) u_if (.*);
 
     ID #(
-        .ISA_ZICSR(ISA_ZICSR),
+        .SUPPORT_ZICSR(SUPPORT_ZICSR),
         .SUPPORT_TRAP(SUPPORT_TRAP)
     ) u_id (.*);
 
