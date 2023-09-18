@@ -162,12 +162,28 @@ module csr (
     assign csr_rd_mstatus_mie  = mstatus_mie;
     assign csr_rd_mstatus_mpie = mstatus_mpie;
 
+    // ------------------------------------------
+    // ISA and extensions (misa)
+    // ------------------------------------------
+
     always @(*) begin
         mstatus = '0;
         mstatus.mpp = 2'b11; // mpp is always 2'b11
         mstatus.mie = mstatus_mie;
         mstatus.mpie = mstatus_mpie;
     end
+
+    struct packed {
+        logic [`XLEN-1:`XLEN-2]   mxl;
+        logic [`XLEN-3:26]  rsvd;
+        logic [25:0]        extensions;
+    } misa;
+
+    `CSR_REG_LOGIC(misa, `MISA)
+
+    assign misa.mxl  = 2'd1;    // XLEN = 32
+    assign misa.rsvd = 0;       //  26  23   19   15   11   7    3  0
+    assign misa.extensions = 26'b00_0000_0000_0000_0001_0000_0000;
 
     // ------------------------------------------
     // Machine interrupt-enable register (mie)
@@ -249,6 +265,9 @@ module csr (
     `CSR_FIELD_LOGIC_HW(mcause, interrupt, 1, 0, ent_trap, [`XLEN-1])
     `CSR_FIELD_LOGIC_HW(mcause, exception_code, (`XLEN-1), 0, ent_trap, [`XLEN-2:0])
 
+    assign mcause.interrupt = mcause_interrupt;
+    assign mcause.exception_code = mcause_exception_code;
+
     // ------------------------------------------
     // Machine exception program counter register (mepc)
     // ------------------------------------------
@@ -314,11 +333,13 @@ module csr (
     // ------------------------------------------
 
     assign csr_read_data =  ({`XLEN{mstatus_ctrl_read}}  & mstatus)  |
+                            ({`XLEN{misa_ctrl_read}}     & misa)     |
                             ({`XLEN{mie_ctrl_read}}      & mie)      |
                             ({`XLEN{mtvec_ctrl_read}}    & mtvec)    |
                             ({`XLEN{mscratch_ctrl_read}} & mscratch) |
                             ({`XLEN{mcause_ctrl_read}}   & mcause)   |
                             ({`XLEN{mepc_ctrl_read}}     & mepc)     |
                             ({`XLEN{mip_ctrl_read}}      & mip)      ;
+
 
 endmodule

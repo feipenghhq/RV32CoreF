@@ -68,6 +68,7 @@ module MEM #(
     output logic [`REG_AW-1:0]          mem_rd_addr,
     output logic [`XLEN-1:0]            mem_rd_wdata,
     output logic                        mem_mem_read_wait,
+    output logic                        mem_csr_read,
     // Data RAM Access
     input  logic                        dram_rvalid,
     input  logic [`XLEN-1:0]            dram_rdata
@@ -110,7 +111,7 @@ module MEM #(
     assign mem_req = mem_done & mem_valid;
 
     assign mem_pipe_ready = ~mem_valid | mem_req & wb_pipe_ready;
-    assign mem_pipe_flush = wb_pipe_flush;
+    assign mem_pipe_flush = (mem_pipe_valid & (mem_pipe_exc_pending | mem_pipe_mret)) | wb_pipe_flush;
 
     // Pipeline Register Update
     always @(posedge clk) begin
@@ -215,6 +216,7 @@ module MEM #(
     assign mem_rd_write = mem_pipe_rd_write & mem_pipe_valid;
     assign mem_rd_addr  = mem_pipe_rd_addr;
     assign mem_rd_wdata = rd_data;
+    assign mem_csr_read = mem_pipe_csr_read & mem_pipe_valid;
     assign mem_mem_read_wait = mem_pipe_mem_read & ~dram_rvalid;
 
 endmodule

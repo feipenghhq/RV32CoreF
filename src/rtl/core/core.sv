@@ -15,7 +15,7 @@
 
 module core #(
     parameter PC_RESET_ADDR = `XLEN'h0,
-    parameter SUPPORT_ZICSR = 1,        // Support Zicsr instruction sets
+    parameter SUPPORT_ZICSR = 1,    // Support Zicsr instruction sets
     parameter SUPPORT_TRAP = 1      // Support exception and interrupt
 ) (
     input  logic                clk,
@@ -140,6 +140,7 @@ module core #(
     logic [`REG_AW-1:0]             mem_rd_addr;
     logic [`XLEN-1:0]               mem_rd_wdata;
     logic                           mem_mem_read_wait;
+    logic                           mem_csr_read;
     // From WB stage
     logic                           wb_rd_write;
     logic [`XLEN-1:0]               wb_rd_wdata;

@@ -36,9 +36,7 @@ module decoder #(
     output logic                        dec_unsign,         // unsigned branch instruction or unsigned mem instruction
     output logic                        dec_rd_write,       // rd write
     output logic [`REG_AW-1:0]          dec_rd_addr,        // rd address
-    output logic                        dec_rs1_read,       // rs1 read
     output logic [`REG_AW-1:0]          dec_rs1_addr,       // rs1 address
-    output logic                        dec_rs2_read,       // rs2 read
     output logic [`REG_AW-1:0]          dec_rs2_addr,       // rs2 address
     output logic [`XLEN-1:0]            dec_immediate,      // immediate value
     output logic                        dec_csr_write,      // csrrw/csrrwi
@@ -82,7 +80,7 @@ module decoder #(
 
     logic rv32i_funct7_eq_0x0;
     logic rv32i_funct7_eq_0x20;
-    logic rv32i_funct7_eq_0x8;
+    logic rv32i_funct7_eq_0x18;
 
     // Instruction opcode
     logic is_add;
@@ -172,7 +170,7 @@ module decoder #(
     // Funct7
     assign rv32i_funct7_eq_0x0  = (rv32i_funct7 == 7'h00);
     assign rv32i_funct7_eq_0x20 = (rv32i_funct7 == 7'h20);
-    assign rv32i_funct7_eq_0x8  = (rv32i_funct7 == 7'h08);
+    assign rv32i_funct7_eq_0x18 = (rv32i_funct7 == 7'h18);
 
     // itype and rtype decode
     assign is_slt  = (rv32i_funct3 == `RV32I_FUNC3_SLT)  & (is_itype | (is_rtype & rv32i_funct7_eq_0x0));
@@ -203,8 +201,8 @@ module decoder #(
 
     generate
     if (SUPPORT_TRAP) begin: gen_ret
-        assign is_mret = is_system & (rv32i_funct3 == 0) & rv32i_funct7_eq_0x8
-                                   & (dec_rd_addr == 0)  & (dec_rs2_addr == 0);
+        assign is_mret = is_system & (rv32i_funct3 == 0) & rv32i_funct7_eq_0x18
+                                   & (dec_rd_addr == 0)  & (dec_rs1_addr == 5'd0) & (dec_rs2_addr == 5'd2);
     end
     else begin: no_ret
         assign is_mret = 1'b0;
@@ -243,9 +241,9 @@ module decoder #(
     assign dec_mem_opcode[`MEM_OP_WORD] = ls_is_word;
 
     assign dec_jump = is_jal | is_jalr;
-    assign dec_rd_write = is_lui | is_auipc | dec_jump | is_itype | is_rtype | is_load;
-    assign dec_rs1_read = is_rtype | is_itype | is_jalr | is_branch | is_load | is_store;
-    assign dec_rs2_read = is_rtype | is_store | is_branch;
+    assign dec_rd_write = is_lui | is_auipc | dec_jump | is_itype | is_rtype | is_load | dec_csr_read;
+    //assign dec_rs1_read = is_rtype | is_itype | is_jalr | is_branch | is_load | is_store | is_csr | is_csrrw | is_csrrs | is_csrrc;
+    //assign dec_rs2_read = is_rtype | is_store | is_branch;
     assign dec_mem_read = is_load;
     assign dec_mem_write = is_store;
 
@@ -284,7 +282,7 @@ module decoder #(
         assign csrrs_write = |dec_rs1_addr; // csrrs/csrrsi should not write CSR if rs1 = x0 (uimm = 0)
         assign csrrc_write = csrrs_write;   // same condition as csrrs/csrrsi
 
-        assign is_csrrw = is_csr & (rv32i_funct3[1:0] == 2'b00);
+        assign is_csrrw = is_csr & (rv32i_funct3[1:0] == 2'b01);
         assign is_csrrs = is_csr & (rv32i_funct3[1:0] == 2'b10);
         assign is_csrrc = is_csr & (rv32i_funct3[1:0] == 2'b11);
         assign dec_csr_write = is_csrrw;
@@ -296,7 +294,6 @@ module decoder #(
         assign csr_type_imm_val = {{`XLEN-5{1'b0}}, dec_rs1_addr};
     end
     else begin: no_ISA_ZICSR
-        assign is_csr = 1'b0;
         assign is_csrrw = 1'b0;
         assign is_csrrs = 1'b0;
         assign is_csrrc = 1'b0;
@@ -327,7 +324,7 @@ module decoder #(
                                     ~(is_slt | is_sltu | is_xor | is_or  | is_and |
                                       is_add | is_srl  | is_sra | is_sll | is_sub);
         assign invalid_system = is_system & (
-                                            ~is_mret |
+                                            ~is_mret &
                                             SUPPORT_ZICSR & ~(is_csrrw | is_csrrs | is_csrrc)
                                             );
         assign dec_illegal_instr = invalid_opcode | invalid_jalr   | invalid_bxx | invalid_load |

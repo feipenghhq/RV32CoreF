@@ -63,7 +63,8 @@ module trap (
     input logic [`XLEN-1:0]     csr_rd_mepc_mepc
 );
 
-    logic [`XLEN-3:0] interrupt_mtvec_pc; // interrupt biased pc
+    logic [`XLEN-1:0] mtvec_vectored;
+    logic [`XLEN-1:0] mtvec_nonvectored;
     logic [`XLEN-1:0] ent_pc; // new pc for entering exception/interrupt
     logic [`XLEN-1:0] ret_pc; // new pc for returning exception/interrupt
 
@@ -79,13 +80,13 @@ module trap (
     // -----------------------------------
 
     // Start to execute from PC address defined in mtvec
-    assign interrupt_mtvec_pc = csr_rd_mtvec_base + (exc_code << 2);
+    assign mtvec_vectored = {csr_rd_mtvec_base, 2'b0} + {exc_code, 2'b0};
+    assign mtvec_nonvectored = {csr_rd_mtvec_base, 2'b0};
     // New PC value:
     // If mode = 0, both exception and interrupt use mtvec_base
     // If mode = 1, exception use mtvec_base while interrupt use mtvec_base + 4*cause
     // => This is the same as if mode == 1 && interrupt, use mtvec_base + 4*cause else use mtvec_base
-    assign ent_pc[`XLEN-3:0] = (exc_interrupt && (csr_rd_mtvec_mode == 2'b0)) ? interrupt_mtvec_pc : csr_rd_mtvec_base;
-    assign ent_pc[`XLEN-1:`XLEN-2] = 2'b0;
+    assign ent_pc = (exc_interrupt && (csr_rd_mtvec_mode == 2'b1)) ? mtvec_nonvectored : mtvec_nonvectored;
     // Update mcause register
     assign csr_wr_mcause_interrupt = exc_interrupt;
     assign csr_wr_mcause_exception_code[3:0] = exc_interrupt ? interrupt_code : exc_code;

@@ -64,6 +64,7 @@ module ID #(
     input  logic                        mem_rd_write,
     input  logic [`REG_AW-1:0]          mem_rd_addr,
     input  logic [`XLEN-1:0]            mem_rd_wdata,
+    input  logic                        mem_csr_read,
     input  logic                        mem_mem_read_wait,
     // EX --> ID
     input  logic                        ex_rd_write,
@@ -99,8 +100,6 @@ module ID #(
     logic                           dec_branch;
     logic [`BRANCH_OP_WIDTH-1:0]    dec_branch_opcode;
     logic                           dec_jump;
-    logic                           dec_rs1_read;
-    logic                           dec_rs2_read;
     logic                           dec_mem_read;
     logic                           dec_mem_write;
     logic [`MEM_OP_WIDTH-1:0]       dec_mem_opcode;
@@ -136,7 +135,7 @@ module ID #(
     // --------------------------------------
 
     assign id_valid = id_pipe_valid & ~ex_pipe_flush;
-    assign id_done  = ~id_depends_on_load;
+    assign id_done  = ~id_depends_on_load & ~id_depends_on_csr;
     assign id_req   = id_done & id_valid;
 
     assign id_pipe_ready = ~id_valid | id_req & ex_pipe_ready;
@@ -225,12 +224,12 @@ module ID #(
     // Forwarding Logic
     // --------------------------------------
 
-    assign rs1_match_ex  = dec_rs1_read & (dec_rs1_addr == ex_rd_addr)  & ex_rd_write;
-    assign rs1_match_mem = dec_rs1_read & (dec_rs1_addr == mem_rd_addr) & mem_rd_write;
-    assign rs1_match_wb  = dec_rs1_read & (dec_rs1_addr == wb_rd_addr)  & wb_rd_write;
-    assign rs2_match_ex  = dec_rs2_read & (dec_rs2_addr == ex_rd_addr)  & ex_rd_write;
-    assign rs2_match_mem = dec_rs2_read & (dec_rs2_addr == mem_rd_addr) & mem_rd_write;
-    assign rs2_match_wb  = dec_rs2_read & (dec_rs2_addr == wb_rd_addr)  & wb_rd_write;
+    assign rs1_match_ex  = (dec_rs1_addr == ex_rd_addr)  & ex_rd_write;
+    assign rs1_match_mem = (dec_rs1_addr == mem_rd_addr) & mem_rd_write;
+    assign rs1_match_wb  = (dec_rs1_addr == wb_rd_addr)  & wb_rd_write;
+    assign rs2_match_ex  = (dec_rs2_addr == ex_rd_addr)  & ex_rd_write;
+    assign rs2_match_mem = (dec_rs2_addr == mem_rd_addr) & mem_rd_write;
+    assign rs2_match_wb  = (dec_rs2_addr == wb_rd_addr)  & wb_rd_write;
 
     assign rs1_rdata_forwarded = (dec_rs1_addr == 0) ? 0 :
                                  rs1_match_ex  ? ex_rd_wdata :
@@ -256,6 +255,9 @@ module ID #(
     assign id_depends_on_load = ex_pipe_mem_read & ex_pipe_valid & (rs1_match_ex | rs2_match_ex) |
                                 mem_mem_read_wait & (rs1_match_mem | rs2_match_mem);
 
+    // W need to stall if there is a data depencencies on csr instructions
+    assign id_depends_on_csr = ex_pipe_csr_read & ex_pipe_valid & (rs1_match_ex | rs2_match_ex) |
+                               mem_csr_read & (rs1_match_mem | rs2_match_mem);
 
     // --------------------------------------
     // Exception
@@ -284,13 +286,5 @@ module ID #(
     ) u_decoder(
         .instruction(id_pipe_instruction),
         .*);
-
-    // -------------------------------------------
-    // Coverage
-    // -------------------------------------------
-
-    `ifdef COVERAGE
-
-    `endif
 
 endmodule

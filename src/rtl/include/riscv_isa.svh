@@ -53,6 +53,7 @@
 
 // CSR address
 `define MSTATUS             12'h300
+`define MISA                12'h301
 `define MIE                 12'h304
 `define MTVEC               12'h305
 

@@ -53,10 +53,10 @@ echo "Number of failed test:  $failed"  | tee -a $output_file
 echo "Number of timeout test: $timeout" | tee -a $output_file
 
 if [ "$failed" -gt 0 ]; then
-echo "Summary of failed test: \n$failed_test"
+echo "Summary of failed test: \n$failed_test" | tee -a $output_file
 fi
 
 if [ "$timeout" -gt 0 ]; then
-echo "Summary of timeout test: \n$timeout_test"
+echo "Summary of timeout test: \n$timeout_test" | tee -a $output_file
 fi
 

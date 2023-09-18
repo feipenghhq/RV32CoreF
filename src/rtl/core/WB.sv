@@ -95,7 +95,7 @@ module WB #(
     assign wb_done = 1'b1;
     assign wb_pipe_ready = wb_done;
     assign wb_req = wb_done & wb_valid;
-    assign wb_pipe_flush = 1'b0;
+    assign wb_pipe_flush = wb_pipe_valid & (wb_pipe_exc_pending | wb_pipe_mret);
 
     // --------------------------------------
     // register write logic
@@ -119,7 +119,8 @@ module WB #(
         .csr_read       (wb_pipe_csr_read),
         .csr_info       (wb_pipe_csr_info),
         .csr_addr       (wb_pipe_csr_addr),
-        .csr_read_data  (csr_read_data)
+        .csr_read_data  (csr_read_data),
+        .*
         );
     end
     else begin: no_csr

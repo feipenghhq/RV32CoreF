@@ -357,21 +357,38 @@ However, this will cause RAW dependence on non-CSR register (Register x1 - x31) 
 
 We only implemented necessary CSR registers (mainly CSR used by interrupt). Other CSR registers are read only and always return zero.
 
-## Exception and Interrupt
+## Trap: Exception, Interrupt, and m(s)ret instruction
 
-All the exception are handled as precise exception and processed at WB stage. All the exception generated along the path are store in the pipeline register and passed to the next stage.
+All the exception are handled as precise exception and processed at WB stage. The exception generated in the pipeline stage is carry overred into the next stage and finally reaches WB stage and processed by trap controller module. When the instruction reached WB stage, all the instruction in the pipeline will be flushed and execution start from trap handler defined in mtvec CSR register.
 
-Interrupt is also treated as precise exception, and it will be handled similarly as precise exception. We log the interrupt at ID stage and pass the interrupt information from ID stage eventually to WB stage. **However, interrupt can only be logged at ID stage when ID stage is valid.** This is because this instruction will be flushed when it enter WB stage and be re-executed when interrupt exit. If the instruction in ID stage is not a valid instruction (bubble), then we don't know where the continue the execution after exiting interrupt.
+Interrupt is treated similar to precise exception. It is logged at ID stage, carry overred to WB stage, and processed there. 
 
-In ID stage, we only log the info that there is an interrupt pending but we don't log the interrupt type to save registers. This is OK because interrupt should not be changed once it is raised till it is processed so we wait to get the interrupt info in WB stage.
+### Implementation details regarding exception and interrupt
 
-A pipeline stage will be invalidated if there are exception/interrupt in its downstream pipeline stage. For example, if MEM stage has an exception/interrupt, then IF/ID/EX stage will be invalidate. This will prevent the instruction commit to critical units (such as write memory) since the instruction will eventually be flushed out when exception/interrupt reach the WB stage. 
+1. In our 5 pipeline architecture, exception can only be generated in ID, EX stage. Interrupt is logged at ID stage, when means that once an instruction reaches MEM stage, it will not generate any exception.
 
-In order to improve timing in the pipeline control, a separate exception (including interrupt) valid signal is added to the pipeline stage to indicate that if there is an exception/instruction in the current stage so we can flush the pipeline stage accordingly using exception valid.
+2. We use pipeline stage register to carry over the information about exception and interrupt. These signal includes:
 
-### Trap controller
+   | Signal               | Comments                                                     |
+   | -------------------- | ------------------------------------------------------------ |
+   | *_pipe_exc_pending   | Indicate that there is an exception/interrupt in carried in this stage |
+   | *_pipe_exc_code      | Stores the exception code. If the current stage already carried an interrupt then this register will not be updated. |
+   | *_pipe_exc_tval      | Stores the info for mtval                                    |
+   | *_pipe_exc_interrupt | Indicate that the pending item is an interrupt (not a exception) |
 
-A trap controller is used to process the exception and interrupt. As mentioned above it is located in WB stage.
+   All these signal are qualified by `*_pipe_valid` signal. When the `pipe_valid` signal is zero, the exception information are invalid.
+
+3. If an instruction generated exception, than it will not be executed. For example, if ID stage generated illegal instruction, then all the control signal (such as mem read/mem write/branch) will be invalided so this instruction will not executed. If a branch instruction in EX stage generated misaligned address exception, the then branch will not be taken even if it is successful.
+4. If an interrupt is logged in ID stage, then the control signal going into EX stage will be flushed so the instruction will not be executed.
+5. Interrupt is logged at ID stage only when ID stage is valid. This is because the instruction in ID stage will be re-executed after finishing the execution of interrupt handler and we need a valid instruction to do that.
+
+### Pipeline Flushing caused by exception/interrupt/m(s)ret instruction
+
+When exception(including interrupt) information is carried in the pipeline stage, we should not commit any junior instruction in the pipeline because they will be eventually flushed when the exception reach WB stage. Similarly mret(sret) will also flush the entire pipeline when it reach WB stage.
+
+For example, if we have an exception in MEM stage and EX stage has a store instruction, then we should not assert the memory write request to memory controller.
+
+In order to prevent junior instruction being comitted before the exception reach WB stage, we should flush all the junior pipeline stage even before exception reach WB stage. In our current pipeline stage, commit happens on EX stage (memory write), and WB stage (register file, CSR write), so we need to flush all the previous stage when MEM stage or WB stage has exception logged.
 
 ## SRAM Bus
 

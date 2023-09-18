@@ -145,7 +145,7 @@ module EX #(
     assign ex_req = ex_done & ex_valid;
 
     assign ex_pipe_ready = ~ex_valid | ex_req & mem_pipe_ready;
-    assign ex_pipe_flush = ex_branch | (ex_pipe_exc_pending & ex_pipe_valid) | mem_pipe_flush;
+    assign ex_pipe_flush = ex_branch | mem_pipe_flush;
 
     // Pipeline Register Update
     always @(posedge clk) begin
