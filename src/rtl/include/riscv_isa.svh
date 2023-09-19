@@ -64,14 +64,16 @@
 `define MIP                 12'h344
 
 // Exception code
-`define INSTR_ADDR_MISALIGNED   4'd0
-`define ILLEGAL_INSTRUCTION     4'd2
-`define LOAD_ADDR_MISALIGNED    4'd4
-`define STORE_ADDR_MISALIGNED   4'd6
+`define EC_INSTR_ADDR_MISALIGNED   4'd0
+`define EC_ILLEGAL_INSTRUCTION     4'd2
+`define EC_BREAKPOINT              4'd3
+`define EC_LOAD_ADDR_MISALIGNED    4'd4
+`define EC_STORE_ADDR_MISALIGNED   4'd6
+`define EC_ECALL_M_MODE            4'd11
 
 // Interrupt code
-`define M_SOFTWARE_INTERRUPT    4'd3
-`define M_TIMER_INTERRUPT       4'd7
-`define M_EXTERNAL_INTERRUPT    4'd11
+`define EC_M_SOFTWARE_INTERRUPT    4'd3
+`define EC_M_TIMER_INTERRUPT       4'd7
+`define EC_M_EXTERNAL_INTERRUPT    4'd11
 
 `endif

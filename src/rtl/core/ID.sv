@@ -111,6 +111,8 @@ module ID #(
     logic                           dec_csr_read;
     logic [11:0]                    dec_csr_addr;
     logic                           dec_mret;
+    logic                           dec_ecall;
+    logic                           dec_ebreak;
     logic                           dec_illegal_instr;
 
     // Forward logic
@@ -264,8 +266,10 @@ module ID #(
     // --------------------------------------
 
     assign isntr_valid = ~dec_illegal_instr;
-    assign exception_pending = id_pipe_valid & (dec_illegal_instr | interrupt_req);
-    assign exception_code = {4{dec_illegal_instr}} & (`ILLEGAL_INSTRUCTION);
+    assign exception_pending = id_pipe_valid & (dec_illegal_instr | interrupt_req | dec_ecall | dec_ebreak);
+    assign exception_code = ({4{dec_illegal_instr}} & `EC_ILLEGAL_INSTRUCTION) |
+                            ({4{dec_ecall}}         & `EC_ECALL_M_MODE)        | // we only support M mode at this point
+                            ({4{dec_ebreak}}        & `EC_BREAKPOINT);
 
     // --------------------------------------
     // Module Instantiation

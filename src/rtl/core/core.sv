@@ -41,8 +41,7 @@ module core #(
     // Interrput
     input  logic                external_interrupt,
     input  logic                software_interrupt,
-    input  logic                timer_interrupt,
-    input  logic                debug_interrupt
+    input  logic                timer_interrupt
 );
 
     // --------------------------------------
@@ -154,7 +153,7 @@ module core #(
     // Glue logic
     // --------------------------------------
 
-    assign interrupt_req = external_interrupt | software_interrupt | timer_interrupt | debug_interrupt;
+    assign interrupt_req = external_interrupt | software_interrupt | timer_interrupt;
 
     // --------------------------------------
     // Module Instantiation

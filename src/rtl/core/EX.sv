@@ -320,9 +320,9 @@ module EX #(
 
 
     assign exception_pending = ex_valid & (exc_load_addr_misaligned | exc_store_addr_misaligned | exc_instr_addr_misaligned);
-    assign exception_code = {4{exc_load_addr_misaligned}}  & `LOAD_ADDR_MISALIGNED  |
-                            {4{exc_store_addr_misaligned}} & `STORE_ADDR_MISALIGNED |
-                            {4{exc_instr_addr_misaligned}} & `INSTR_ADDR_MISALIGNED ;
+    assign exception_code = {4{exc_load_addr_misaligned}}  & `EC_LOAD_ADDR_MISALIGNED  |
+                            {4{exc_store_addr_misaligned}} & `EC_STORE_ADDR_MISALIGNED |
+                            {4{exc_instr_addr_misaligned}} & `EC_INSTR_ADDR_MISALIGNED ;
 
     // --------------------------------------
     // Module Instantiation

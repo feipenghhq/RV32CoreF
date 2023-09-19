@@ -26,7 +26,6 @@ module trap (
     input  logic                software_interrupt,
     input  logic                timer_interrupt,
     input  logic                external_interrupt,
-    input  logic                debug_interrupt,
 
     // trap
     input  logic                valid,
@@ -92,9 +91,9 @@ module trap (
     assign csr_wr_mcause_exception_code[3:0] = exc_interrupt ? interrupt_code : exc_code;
     assign csr_wr_mcause_exception_code[`XLEN-2:4] = 0; // Not used in our design
 
-    assign interrupt_code = {4{software_interrupt}} & `M_SOFTWARE_INTERRUPT |
-                            {4{timer_interrupt}}    & `M_TIMER_INTERRUPT    |
-                            {4{external_interrupt}} & `M_EXTERNAL_INTERRUPT ;
+    assign interrupt_code = {4{software_interrupt}} & `EC_M_SOFTWARE_INTERRUPT |
+                            {4{timer_interrupt}}    & `EC_M_TIMER_INTERRUPT    |
+                            {4{external_interrupt}} & `EC_M_EXTERNAL_INTERRUPT ;
 
 
     // update mepc register

@@ -49,8 +49,7 @@ module WB #(
     // Interrupt input
     input  logic                        external_interrupt,
     input  logic                        software_interrupt,
-    input  logic                        timer_interrupt,
-    input  logic                        debug_interrupt
+    input  logic                        timer_interrupt
 );
 
     // --------------------------------------
