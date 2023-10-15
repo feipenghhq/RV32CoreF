@@ -52,8 +52,6 @@ module ram #(
         instr_ready = 1'b0;
     end
 
-    // Create 1 cycle delay for rvalid signal, can't make this randomized at this point so using
-    // fixed delay
     always @(posedge clk) begin
         if ($test$plusargs("IRAM_RANDOM_rvalid")) begin
             instr_rdata <= #10ns mem[instr_addr];
@@ -66,7 +64,6 @@ module ram #(
     end
 
     always @(instr_req) begin
-        // create 0 ~ 2 clock delay for ready
         if ($test$plusargs("IRAM_RANDOM_ready")) begin
             instr_ready = 1'b0;
             if (instr_req) begin
@@ -79,14 +76,10 @@ module ram #(
         end
     end
 
-    //assign instr_ready = 1'b1; // always accept request
-
     // ---------------------------------------------
     // data ports
     // ---------------------------------------------
 
-    // Create 1 cycle delay for rvalid signal, can't make this randomized at this point so using
-    // fixed delay
     always @(posedge clk) begin
         if ($test$plusargs("DRAM_RANDOM_rvalid")) begin
             data_rdata <= #10ns mem[data_addr];
@@ -109,7 +102,6 @@ module ram #(
     endgenerate
 
     always @(data_req) begin
-        // create 0 ~ 2 clock delay for ready
         if ($test$plusargs("DRAM_RANDOM_ready")) begin
             data_ready = 1'b0;
             if (data_req) begin

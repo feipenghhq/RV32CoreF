@@ -32,10 +32,10 @@ endif
 XVLOG_OPTIONS := -sv
 XELAB_OPTIONS := -timescale 1ns/10ps
 
-#XSIM_PLUSARG  += -testplusarg DRAM_RANDOM_DATA_OK
-#XSIM_PLUSARG  += -testplusarg DRAM_RANDOM_ADDR_OK
-#XSIM_PLUSARG  += -testplusarg IRAM_RANDOM_DATA_OK
-#XSIM_PLUSARG  += -testplusarg IRAM_RANDOM_ADDR_OK
+XSIM_PLUSARG  += -testplusarg DRAM_RANDOM_DATA_OK
+XSIM_PLUSARG  += -testplusarg DRAM_RANDOM_ADDR_OK
+XSIM_PLUSARG  += -testplusarg IRAM_RANDOM_DATA_OK
+XSIM_PLUSARG  += -testplusarg IRAM_RANDOM_ADDR_OK
 ifeq ($(WAVE),1)
 XSIM_PLUSARG  += -testplusarg DUMP
 endif
