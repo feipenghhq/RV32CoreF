@@ -5331,13 +5331,13 @@ Disassembly of section .text.init:
 00003c90 <rvtest_code_end>:
     3c90:	00000297          	auipc	t0,0x0
     3c94:	04028293          	addi	t0,t0,64 # 3cd0 <begin_signature>
-    3c98:	00004337          	lui	t1,0x4
-    3c9c:	ff030313          	addi	t1,t1,-16 # 3ff0 <signature_x14_0+0x2d8>
+    3c98:	00010337          	lui	t1,0x10
+    3c9c:	ff030313          	addi	t1,t1,-16 # fff0 <_end+0xb7d0>
     3ca0:	00532023          	sw	t0,0(t1)
     3ca4:	00001297          	auipc	t0,0x1
     3ca8:	b7c28293          	addi	t0,t0,-1156 # 4820 <_end>
-    3cac:	00004337          	lui	t1,0x4
-    3cb0:	ff430313          	addi	t1,t1,-12 # 3ff4 <signature_x14_0+0x2dc>
+    3cac:	00010337          	lui	t1,0x10
+    3cb0:	ff430313          	addi	t1,t1,-12 # fff4 <_end+0xb7d4>
     3cb4:	00532023          	sw	t0,0(t1)
 
 00003cb8 <self_loop>:

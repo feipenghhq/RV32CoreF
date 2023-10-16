@@ -5,8 +5,8 @@
 
 #define XLEN 32
 
-#define BEGIN_SIGNATURE_PTR    0x3FF0
-#define END_SIGNATURE_PTR      0x3FF4
+#define BEGIN_SIGNATURE_PTR    0xFFF0
+#define END_SIGNATURE_PTR      0xFFF4
 
 #define RVMODEL_HALT                                              \
   la t0, begin_signature;                                         \

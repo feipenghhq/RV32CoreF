@@ -4025,13 +4025,13 @@ Disassembly of section .text.init:
 000028e0 <rvtest_code_end>:
     28e0:	00000297          	auipc	t0,0x0
     28e4:	05028293          	addi	t0,t0,80 # 2930 <begin_signature>
-    28e8:	00004337          	lui	t1,0x4
-    28ec:	ff030313          	addi	t1,t1,-16 # 3ff0 <_end+0xbd0>
+    28e8:	00010337          	lui	t1,0x10
+    28ec:	ff030313          	addi	t1,t1,-16 # fff0 <_end+0xcbd0>
     28f0:	00532023          	sw	t0,0(t1)
     28f4:	00001297          	auipc	t0,0x1
     28f8:	b2c28293          	addi	t0,t0,-1236 # 3420 <_end>
-    28fc:	00004337          	lui	t1,0x4
-    2900:	ff430313          	addi	t1,t1,-12 # 3ff4 <_end+0xbd4>
+    28fc:	00010337          	lui	t1,0x10
+    2900:	ff430313          	addi	t1,t1,-12 # fff4 <_end+0xcbd4>
     2904:	00532023          	sw	t0,0(t1)
 
 00002908 <self_loop>:

@@ -7,6 +7,7 @@ XLEN ?= 32
 src_dir := .
 
 include $(src_dir)/riscv-test-suite/rv32i_m/I/Makefrag
+include $(src_dir)/riscv-test-suite/rv32i_m/M/Makefrag
 
 default: all
 
@@ -22,6 +23,7 @@ RISCV_OBJCOPY ?= $(RISCV_PREFIX)objcopy
 
 # define search path for %.S file
 vpath %.S $(src_dir)/riscv-test-suite/rv32i_m/I/src
+vpath %.S $(src_dir)/riscv-test-suite/rv32i_m/M/src
 
 #------------------------------------------------------------
 # Build assembly tests
@@ -43,6 +45,7 @@ tests += $$($(1)_tests)
 endef
 
 $(eval $(call compile_template,rv32i,-march=rv32i -mabi=ilp32))
+$(eval $(call compile_template,rv32im,-march=rv32im -mabi=ilp32))
 
 tests_dump = $(addsuffix .dump, $(tests))
 tests_hex = $(addsuffix .hex, $(tests))

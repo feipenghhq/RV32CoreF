@@ -554,12 +554,12 @@ Disassembly of section .text.init:
 
 000005c0 <rvtest_code_end>:
  5c0:	60000293          	li	t0,1536
- 5c4:	00004337          	lui	t1,0x4
- 5c8:	ff030313          	addi	t1,t1,-16 # 3ff0 <_end+0x3890>
+ 5c4:	00010337          	lui	t1,0x10
+ 5c8:	ff030313          	addi	t1,t1,-16 # fff0 <_end+0xf890>
  5cc:	00532023          	sw	t0,0(t1)
  5d0:	76000293          	li	t0,1888
- 5d4:	00004337          	lui	t1,0x4
- 5d8:	ff430313          	addi	t1,t1,-12 # 3ff4 <_end+0x3894>
+ 5d4:	00010337          	lui	t1,0x10
+ 5d8:	ff430313          	addi	t1,t1,-12 # fff4 <_end+0xf894>
  5dc:	00532023          	sw	t0,0(t1)
 
 000005e0 <self_loop>:

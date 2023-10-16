@@ -4423,13 +4423,13 @@ Disassembly of section .text.init:
 00003270 <rvtest_code_end>:
     3270:	00000297          	auipc	t0,0x0
     3274:	05028293          	addi	t0,t0,80 # 32c0 <begin_signature>
-    3278:	00004337          	lui	t1,0x4
-    327c:	ff030313          	addi	t1,t1,-16 # 3ff0 <_end+0x3f0>
+    3278:	00010337          	lui	t1,0x10
+    327c:	ff030313          	addi	t1,t1,-16 # fff0 <_end+0xc3f0>
     3280:	00532023          	sw	t0,0(t1)
     3284:	00001297          	auipc	t0,0x1
     3288:	97c28293          	addi	t0,t0,-1668 # 3c00 <_end>
-    328c:	00004337          	lui	t1,0x4
-    3290:	ff430313          	addi	t1,t1,-12 # 3ff4 <_end+0x3f4>
+    328c:	00010337          	lui	t1,0x10
+    3290:	ff430313          	addi	t1,t1,-12 # fff4 <_end+0xc3f4>
     3294:	00532023          	sw	t0,0(t1)
 
 00003298 <self_loop>:

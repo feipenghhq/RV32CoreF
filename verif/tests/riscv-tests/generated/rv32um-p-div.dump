@@ -1,0 +1,126 @@
+
+generated/rv32um-p-div:     file format elf32-littleriscv
+
+
+Disassembly of section .text.init:
+
+00000000 <_start>:
+   0:	00000093          	li	ra,0
+   4:	00000113          	li	sp,0
+   8:	00000193          	li	gp,0
+   c:	00000213          	li	tp,0
+  10:	00000293          	li	t0,0
+  14:	00000313          	li	t1,0
+  18:	00000393          	li	t2,0
+  1c:	00000413          	li	s0,0
+  20:	00000493          	li	s1,0
+  24:	00000513          	li	a0,0
+  28:	00000593          	li	a1,0
+  2c:	00000613          	li	a2,0
+  30:	00000693          	li	a3,0
+  34:	00000713          	li	a4,0
+  38:	00000793          	li	a5,0
+  3c:	00000813          	li	a6,0
+  40:	00000893          	li	a7,0
+  44:	00000913          	li	s2,0
+  48:	00000993          	li	s3,0
+  4c:	00000a13          	li	s4,0
+  50:	00000a93          	li	s5,0
+  54:	00000b13          	li	s6,0
+  58:	00000b93          	li	s7,0
+  5c:	00000c13          	li	s8,0
+  60:	00000c93          	li	s9,0
+  64:	00000d13          	li	s10,0
+  68:	00000d93          	li	s11,0
+  6c:	00000e13          	li	t3,0
+  70:	00000e93          	li	t4,0
+  74:	00000f13          	li	t5,0
+  78:	00000f93          	li	t6,0
+  7c:	00000293          	li	t0,0
+  80:	30529073          	csrw	mtvec,t0
+
+00000084 <test_2>:
+  84:	00200193          	li	gp,2
+  88:	01400093          	li	ra,20
+  8c:	00600113          	li	sp,6
+  90:	0220c733          	div	a4,ra,sp
+  94:	00300393          	li	t2,3
+  98:	0c771463          	bne	a4,t2,160 <fail>
+
+0000009c <test_3>:
+  9c:	00300193          	li	gp,3
+  a0:	fec00093          	li	ra,-20
+  a4:	00600113          	li	sp,6
+  a8:	0220c733          	div	a4,ra,sp
+  ac:	ffd00393          	li	t2,-3
+  b0:	0a771863          	bne	a4,t2,160 <fail>
+
+000000b4 <test_4>:
+  b4:	00400193          	li	gp,4
+  b8:	01400093          	li	ra,20
+  bc:	ffa00113          	li	sp,-6
+  c0:	0220c733          	div	a4,ra,sp
+  c4:	ffd00393          	li	t2,-3
+  c8:	08771c63          	bne	a4,t2,160 <fail>
+
+000000cc <test_5>:
+  cc:	00500193          	li	gp,5
+  d0:	fec00093          	li	ra,-20
+  d4:	ffa00113          	li	sp,-6
+  d8:	0220c733          	div	a4,ra,sp
+  dc:	00300393          	li	t2,3
+  e0:	08771063          	bne	a4,t2,160 <fail>
+
+000000e4 <test_6>:
+  e4:	00600193          	li	gp,6
+  e8:	800000b7          	lui	ra,0x80000
+  ec:	00100113          	li	sp,1
+  f0:	0220c733          	div	a4,ra,sp
+  f4:	800003b7          	lui	t2,0x80000
+  f8:	06771463          	bne	a4,t2,160 <fail>
+
+000000fc <test_7>:
+  fc:	00700193          	li	gp,7
+ 100:	800000b7          	lui	ra,0x80000
+ 104:	fff00113          	li	sp,-1
+ 108:	0220c733          	div	a4,ra,sp
+ 10c:	800003b7          	lui	t2,0x80000
+ 110:	04771863          	bne	a4,t2,160 <fail>
+
+00000114 <test_8>:
+ 114:	00800193          	li	gp,8
+ 118:	800000b7          	lui	ra,0x80000
+ 11c:	00000113          	li	sp,0
+ 120:	0220c733          	div	a4,ra,sp
+ 124:	fff00393          	li	t2,-1
+ 128:	02771c63          	bne	a4,t2,160 <fail>
+
+0000012c <test_9>:
+ 12c:	00900193          	li	gp,9
+ 130:	00100093          	li	ra,1
+ 134:	00000113          	li	sp,0
+ 138:	0220c733          	div	a4,ra,sp
+ 13c:	fff00393          	li	t2,-1
+ 140:	02771063          	bne	a4,t2,160 <fail>
+
+00000144 <test_10>:
+ 144:	00a00193          	li	gp,10
+ 148:	00000093          	li	ra,0
+ 14c:	00000113          	li	sp,0
+ 150:	0220c733          	div	a4,ra,sp
+ 154:	fff00393          	li	t2,-1
+ 158:	00771463          	bne	a4,t2,160 <fail>
+ 15c:	00301863          	bne	zero,gp,16c <pass>
+
+00000160 <fail>:
+ 160:	00100e13          	li	t3,1
+ 164:	00200e93          	li	t4,2
+ 168:	0000006f          	j	168 <fail+0x8>
+
+0000016c <pass>:
+ 16c:	00100e13          	li	t3,1
+ 170:	00100e93          	li	t4,1
+ 174:	0000006f          	j	174 <pass+0x8>
+ 178:	c0001073          	unimp
+ 17c:	0000                	unimp
+ 17e:	0000                	unimp

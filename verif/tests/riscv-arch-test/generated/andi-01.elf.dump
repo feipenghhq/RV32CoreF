@@ -3271,13 +3271,13 @@ Disassembly of section .text.init:
 00002160 <rvtest_code_end>:
     2160:	00000297          	auipc	t0,0x0
     2164:	05028293          	addi	t0,t0,80 # 21b0 <begin_signature>
-    2168:	00004337          	lui	t1,0x4
-    216c:	ff030313          	addi	t1,t1,-16 # 3ff0 <_end+0x1570>
+    2168:	00010337          	lui	t1,0x10
+    216c:	ff030313          	addi	t1,t1,-16 # fff0 <_end+0xd570>
     2170:	00532023          	sw	t0,0(t1)
     2174:	00001297          	auipc	t0,0x1
     2178:	90c28293          	addi	t0,t0,-1780 # 2a80 <_end>
-    217c:	00004337          	lui	t1,0x4
-    2180:	ff430313          	addi	t1,t1,-12 # 3ff4 <_end+0x1574>
+    217c:	00010337          	lui	t1,0x10
+    2180:	ff430313          	addi	t1,t1,-12 # fff4 <_end+0xd574>
     2184:	00532023          	sw	t0,0(t1)
 
 00002188 <self_loop>:

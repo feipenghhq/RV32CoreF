@@ -58143,13 +58143,13 @@ Disassembly of section .text.init:
 00037a10 <rvtest_code_end>:
    37a10:	00000297          	auipc	t0,0x0
    37a14:	06028293          	addi	t0,t0,96 # 37a70 <begin_signature>
-   37a18:	00004337          	lui	t1,0x4
-   37a1c:	ff030313          	addi	t1,t1,-16 # 3ff0 <inst_38+0x1f4>
+   37a18:	00010337          	lui	t1,0x10
+   37a1c:	ff030313          	addi	t1,t1,-16 # fff0 <inst_169+0x28>
    37a20:	00532023          	sw	t0,0(t1)
    37a24:	00001297          	auipc	t0,0x1
    37a28:	96c28293          	addi	t0,t0,-1684 # 38390 <_end>
-   37a2c:	00004337          	lui	t1,0x4
-   37a30:	ff430313          	addi	t1,t1,-12 # 3ff4 <inst_38+0x1f8>
+   37a2c:	00010337          	lui	t1,0x10
+   37a30:	ff430313          	addi	t1,t1,-12 # fff4 <inst_169+0x2c>
    37a34:	00532023          	sw	t0,0(t1)
 
 00037a38 <self_loop>:

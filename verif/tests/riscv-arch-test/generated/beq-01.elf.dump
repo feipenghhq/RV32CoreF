@@ -57617,13 +57617,13 @@ Disassembly of section .text.init:
 000371e0 <rvtest_code_end>:
    371e0:	00000297          	auipc	t0,0x0
    371e4:	05028293          	addi	t0,t0,80 # 37230 <begin_signature>
-   371e8:	00004337          	lui	t1,0x4
-   371ec:	ff030313          	addi	t1,t1,-16 # 3ff0 <inst_53+0x9fc>
+   371e8:	00010337          	lui	t1,0x10
+   371ec:	ff030313          	addi	t1,t1,-16 # fff0 <inst_201+0x2a0>
    371f0:	00532023          	sw	t0,0(t1)
    371f4:	00001297          	auipc	t0,0x1
    371f8:	95c28293          	addi	t0,t0,-1700 # 37b50 <_end>
-   371fc:	00004337          	lui	t1,0x4
-   37200:	ff430313          	addi	t1,t1,-12 # 3ff4 <inst_53+0xa00>
+   371fc:	00010337          	lui	t1,0x10
+   37200:	ff430313          	addi	t1,t1,-12 # fff4 <inst_201+0x2a4>
    37204:	00532023          	sw	t0,0(t1)
 
 00037208 <self_loop>:

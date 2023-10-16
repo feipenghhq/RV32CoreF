@@ -8,6 +8,7 @@ src_dir := .
 
 include $(src_dir)/rv32ui/Makefrag
 include $(src_dir)/rv32mi/Makefrag
+include $(src_dir)/rv32um/Makefrag
 
 default: all
 
@@ -46,6 +47,7 @@ endef
 
 $(eval $(call compile_template,rv32ui,-march=rv32i -mabi=ilp32))
 $(eval $(call compile_template,rv32mi,-march=rv32i -mabi=ilp32))
+$(eval $(call compile_template,rv32um,-march=rv32im -mabi=ilp32))
 
 tests_dump = $(addsuffix .dump, $(tests))
 tests_hex = $(addsuffix .hex, $(tests))

@@ -16,8 +16,8 @@
 `define REG_PATH u_minisoc.u_core.u_id.u_regfile.register
 `define PC       u_minisoc.u_core.u_if.pc
 
-`define BEGIN_SIGNATURE_PTR 16'h3FF0
-`define END_SIGNATURE_PTR 16'h3FF4
+`define BEGIN_SIGNATURE_PTR 16'hFFF0
+`define END_SIGNATURE_PTR 16'hFFF4
 `define BEGIN_SIGNATURE `RAM_PATH[`BEGIN_SIGNATURE_PTR/4]
 `define END_SIGNATURE `RAM_PATH[`END_SIGNATURE_PTR/4]
 
@@ -82,16 +82,15 @@ module tb();
             begin_signature = `BEGIN_SIGNATURE;
             end_signature = `END_SIGNATURE;
             if ((end_signature > begin_signature) && (begin_signature > 16)) begin
-                //$info("TEST FINIISHED.");
+                $info("TEST FINIISHED at time %t.", $time);
                 compare_golden(begin_signature, end_signature, pass, failed_test);
+                #100;
                 if (pass) begin
                     $info("TEST RESULT: PASS. TEST NAME: %s", test_name);
-                    #100;
                     $finish;
                 end
                 else if (!pass) begin
                     $fatal(1, "TEST RESULT: FAIL. TEST NAME: %s\nFailed Test Case: %0d", test_name, failed_test);
-                    #100;
                 end
                 #100;
                 $finish;
@@ -104,26 +103,27 @@ module tb();
         input [31:0]    end_signature;
         output          pass;
         output integer  failed_test;
-        integer      idx;
-        integer      addr;
-        logic [31:0] data;
+        integer         idx;
+        integer         addr;
+        logic [31:0]    data;
 
         addr = begin_signature;
         pass = 1;
-        while (idx < end_signature) begin
-            idx = addr / 4;
-            data = `RAM_PATH[idx];
+        idx  = 0;
+        while (addr < end_signature) begin
+            data = `RAM_PATH[addr/4];
             if (data != golden_mem[idx]) begin
                 pass = 0;
                 failed_test = idx;
+                $display("idx: %d. Data: %h. golden_mem: %h", idx, data, golden_mem[idx]);
             end
-            //$display("%h", data);
             addr = addr + 4;
+            idx = idx + 1;
         end
     endtask
 
     task test_timeout;
-        #400000;
+        #500000;
         $fatal(2, "TEST TIMEOUT. TEST NAME: %s", test_name);
     endtask
 

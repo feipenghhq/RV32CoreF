@@ -735,13 +735,13 @@ Disassembly of section .text.init:
 00000920 <rvtest_code_end>:
  920:	00000297          	auipc	t0,0x0
  924:	06028293          	addi	t0,t0,96 # 980 <begin_signature>
- 928:	00004337          	lui	t1,0x4
- 92c:	ff030313          	addi	t1,t1,-16 # 3ff0 <_end+0x3550>
+ 928:	00010337          	lui	t1,0x10
+ 92c:	ff030313          	addi	t1,t1,-16 # fff0 <_end+0xf550>
  930:	00532023          	sw	t0,0(t1)
  934:	00000297          	auipc	t0,0x0
  938:	16c28293          	addi	t0,t0,364 # aa0 <_end>
- 93c:	00004337          	lui	t1,0x4
- 940:	ff430313          	addi	t1,t1,-12 # 3ff4 <_end+0x3554>
+ 93c:	00010337          	lui	t1,0x10
+ 940:	ff430313          	addi	t1,t1,-12 # fff4 <_end+0xf554>
  944:	00532023          	sw	t0,0(t1)
 
 00000948 <self_loop>:

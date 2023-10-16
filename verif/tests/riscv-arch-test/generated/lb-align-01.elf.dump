@@ -320,12 +320,12 @@ Disassembly of section .text.init:
 
 000003d0 <rvtest_code_end>:
  3d0:	41000293          	li	t0,1040
- 3d4:	00004337          	lui	t1,0x4
- 3d8:	ff030313          	addi	t1,t1,-16 # 3ff0 <_end+0x3b50>
+ 3d4:	00010337          	lui	t1,0x10
+ 3d8:	ff030313          	addi	t1,t1,-16 # fff0 <_end+0xfb50>
  3dc:	00532023          	sw	t0,0(t1)
  3e0:	4a000293          	li	t0,1184
- 3e4:	00004337          	lui	t1,0x4
- 3e8:	ff430313          	addi	t1,t1,-12 # 3ff4 <_end+0x3b54>
+ 3e4:	00010337          	lui	t1,0x10
+ 3e8:	ff430313          	addi	t1,t1,-12 # fff4 <_end+0xfb54>
  3ec:	00532023          	sw	t0,0(t1)
 
 000003f0 <self_loop>:
