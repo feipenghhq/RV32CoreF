@@ -15,6 +15,7 @@
 `include "riscv_isa.svh"
 
 module EX #(
+    parameter SUPPORT_RV32M = 1,
     parameter SUPPORT_ZICSR = 1,
     parameter SUPPORT_TRAP = 1
 ) (
@@ -47,6 +48,10 @@ module EX #(
     input  logic                        ex_pipe_csr_read,
     input  logic [11:0]                 ex_pipe_csr_addr,
     input  logic                        ex_pipe_mret,
+    input  logic                        ex_pipe_mul,
+    input  logic [`MUL_OP_WIDTH-1:0]    ex_pipe_mul_opcode,
+    input  logic                        ex_pipe_div,
+    input  logic [`MUL_OP_WIDTH-1:0]    ex_pipe_div_opcode,
     input  logic                        ex_pipe_exc_pending,
     input  logic [3:0]                  ex_pipe_exc_code,
     input  logic                        ex_pipe_exc_interrupt,
@@ -70,6 +75,8 @@ module EX #(
     output logic [`XLEN-1:0]            mem_pipe_csr_info,
     output logic [11:0]                 mem_pipe_csr_addr,
     output logic                        mem_pipe_mret,
+    output logic                        mem_pipe_mul,
+    output logic                        mem_pipe_div,
     output logic                        mem_pipe_exc_pending,
     output logic [3:0]                  mem_pipe_exc_code,
     output logic [`XLEN-1:0]            mem_pipe_exc_tval,
@@ -80,6 +87,7 @@ module EX #(
     output logic                        ex_rd_write,
     output logic [`REG_AW-1:0]          ex_rd_addr,
     output logic [`XLEN-1:0]            ex_rd_wdata,
+    output logic [`XLEN-1:0]            wb_mul_result,  // The result is actually available in WB stage so we add wb as prefix
     // Data RAM Access
     output logic                        dram_req,
     output logic                        dram_write,
@@ -172,7 +180,7 @@ module EX #(
     generate
     if (SUPPORT_ZICSR) begin: gen_csr_pipe
         always @(posedge clk) begin
-            if (mem_pipe_ready & ex_req) begin
+            if (mem_pipe_ready && ex_req) begin
                 mem_pipe_csr_write <= ex_pipe_csr_write;
                 mem_pipe_csr_set   <= ex_pipe_csr_set;
                 mem_pipe_csr_clear <= ex_pipe_csr_clear;
@@ -196,7 +204,7 @@ module EX #(
     generate
     if (SUPPORT_TRAP) begin: gen_trap_pipe
         always @(posedge clk) begin
-            if (mem_pipe_ready & ex_req) begin
+            if (mem_pipe_ready && ex_req) begin
                 mem_pipe_mret <= ex_pipe_mret;
                 mem_pipe_exc_pending <= ex_pipe_exc_pending | exception_pending;
                 mem_pipe_exc_code <= ex_pipe_exc_pending ? ex_pipe_exc_code : exception_code;
@@ -211,6 +219,22 @@ module EX #(
         assign mem_pipe_exc_code = 4'b0;
         assign mem_pipe_exc_tval = `XLEN'b0;
         assign mem_pipe_exc_interrupt = 1'b0;
+    end
+    endgenerate
+
+    // RV32M Extension
+    generate
+    if (SUPPORT_RV32M) begin: gen_rv32m_pipe
+        always @(posedge clk) begin
+            if (mem_pipe_ready && ex_req) begin
+                mem_pipe_mul <= ex_pipe_mul;
+                mem_pipe_div <= ex_pipe_div;
+            end
+        end
+    end
+    else begin: no_rv32m_pipe
+        assign mem_pipe_mul = 1'b0;
+        assign mem_pipe_div = 1'b0;
     end
     endgenerate
 
@@ -292,6 +316,28 @@ module EX #(
                       ({`XLEN{alu_src1_sel_zero}} & {`XLEN{1'b0}}) |
                       ({`XLEN{alu_src1_sel_rs1}} & ex_pipe_rs1_rdata);
     assign alu_src2 = ex_pipe_alu_src2_sel_imm ? ex_pipe_immediate : ex_pipe_rs2_rdata;
+
+    // --------------------------------------
+    // Multiplier
+    // --------------------------------------
+    // Multiplier logic actually cross 3 stages: EX/MEM/WB
+    // We instantiate the multiplier in EX stage and the output is send to WB stage directly
+    generate
+    if (SUPPORT_RV32M) begin: gen_multiplier
+        multiplier u_multiplier(
+            .clk        (clk),
+            .rst_b      (rst_b),
+            .mul        (ex_pipe_mul),
+            .mul_opcode (ex_pipe_mul_opcode),
+            .mul_src1   (alu_src1),
+            .mul_src2   (alu_src2),
+            .mul_result (wb_mul_result)
+        );
+    end
+    else begin: no_multiplier
+
+    end
+    endgenerate
 
     // --------------------------------------
     // Final EX stage result

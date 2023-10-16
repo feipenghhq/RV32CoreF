@@ -35,10 +35,14 @@ module WB #(
     input  logic [`XLEN-1:0]            wb_pipe_csr_info,
     input  logic [11:0]                 wb_pipe_csr_addr,
     input  logic                        wb_pipe_mret,
+    input  logic                        wb_pipe_mul,
+    input  logic                        wb_pipe_div,
     input  logic                        wb_pipe_exc_pending,
     input  logic [3:0]                  wb_pipe_exc_code,
     input  logic [`XLEN-1:0]            wb_pipe_exc_tval,
     input  logic                        wb_pipe_exc_interrupt,
+    // Multiplier result
+    input  logic [`XLEN-1:0]            wb_mul_result,
     // To register writeback
     output logic                        wb_rd_write,
     output logic [`REG_AW-1:0]          wb_rd_addr,
@@ -85,6 +89,9 @@ module WB #(
     logic             ent_trap;
     logic             ext_trap;
 
+    // register
+    logic             rd_sel_alu;
+
     // --------------------------------------
     // Pipeline Logic
     // --------------------------------------
@@ -99,9 +106,13 @@ module WB #(
     // --------------------------------------
     // register write logic
     // --------------------------------------
+    assign rd_sel_alu = ~(wb_pipe_csr_read | wb_pipe_mul | wb_pipe_div);
+
     assign wb_rd_write = wb_pipe_rd_write & wb_pipe_valid;
     assign wb_rd_addr  = wb_pipe_rd_addr;
-    assign wb_rd_wdata = wb_pipe_csr_read ? csr_read_data : wb_pipe_rd_data;
+    assign wb_rd_wdata = ({`XLEN{wb_pipe_csr_read}} & csr_read_data) |
+                         ({`XLEN{wb_pipe_mul}}      & wb_mul_result) |
+                         ({`XLEN{rd_sel_alu}}       & wb_pipe_rd_data);
 
     // --------------------------------------
     // Module instantiation

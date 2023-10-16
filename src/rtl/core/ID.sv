@@ -15,6 +15,7 @@
 `include "riscv_isa.svh"
 
 module ID #(
+    parameter SUPPORT_RV32M = 1,
     parameter SUPPORT_ZICSR = 1,
     parameter SUPPORT_TRAP = 1
 ) (
@@ -53,6 +54,10 @@ module ID #(
     output logic                        ex_pipe_csr_read,
     output logic [11:0]                 ex_pipe_csr_addr,
     output logic                        ex_pipe_mret,
+    output logic                        ex_pipe_mul,
+    output logic [`MUL_OP_WIDTH-1:0]    ex_pipe_mul_opcode,
+    output logic                        ex_pipe_div,
+    output logic [`MUL_OP_WIDTH-1:0]    ex_pipe_div_opcode,
     output logic                        ex_pipe_exc_pending,
     output logic [3:0]                  ex_pipe_exc_code,
     output logic                        ex_pipe_exc_interrupt,
@@ -65,6 +70,7 @@ module ID #(
     input  logic [`REG_AW-1:0]          mem_rd_addr,
     input  logic [`XLEN-1:0]            mem_rd_wdata,
     input  logic                        mem_csr_read,
+    input  logic                        mem_mul,
     input  logic                        mem_mem_read_wait,
     // EX --> ID
     input  logic                        ex_rd_write,
@@ -113,6 +119,10 @@ module ID #(
     logic                           dec_mret;
     logic                           dec_ecall;
     logic                           dec_ebreak;
+    logic                           dec_mul;
+    logic [`MUL_OP_WIDTH-1:0]       dec_mul_opcode;
+    logic                           dec_div;
+    logic [`MUL_OP_WIDTH-1:0]       dec_div_opcode;
     logic                           dec_illegal_instr;
 
     // Forward logic
@@ -126,6 +136,7 @@ module ID #(
     // Stall logic
     logic                           id_depends_on_load;
     logic                           id_depends_on_csr;
+    logic                           id_depends_on_mul;
 
     // MISC
     logic                           isntr_valid;
@@ -137,7 +148,7 @@ module ID #(
     // --------------------------------------
 
     assign id_valid = id_pipe_valid & ~ex_pipe_flush;
-    assign id_done  = ~id_depends_on_load & ~id_depends_on_csr;
+    assign id_done  = ~(id_depends_on_load | id_depends_on_csr | id_depends_on_mul);
     assign id_req   = id_done & id_valid;
 
     assign id_pipe_ready = ~id_valid | id_req & ex_pipe_ready;
@@ -152,7 +163,7 @@ module ID #(
     // Note: Control signal should be garded by exception. if exception happens, we don't want to execute
     // the instruction so we should set the control bit to zero
     always @(posedge clk) begin
-        if (ex_pipe_ready & id_req) begin
+        if (ex_pipe_ready && id_req) begin
             ex_pipe_branch <= dec_branch & ~exception_pending;
             ex_pipe_jump <= dec_jump & ~exception_pending;
             ex_pipe_rd_write <= dec_rd_write & ~exception_pending;
@@ -177,7 +188,7 @@ module ID #(
     generate
     if (SUPPORT_ZICSR) begin: gen_csr_pipe
         always @(posedge clk) begin
-            if (ex_pipe_ready & id_req) begin
+            if (ex_pipe_ready && id_req) begin
                 ex_pipe_csr_write <= dec_csr_write & ~exception_pending;
                 ex_pipe_csr_set   <= dec_csr_set   & ~exception_pending;
                 ex_pipe_csr_clear <= dec_csr_clear & ~exception_pending;
@@ -199,7 +210,7 @@ module ID #(
     generate
     if (SUPPORT_TRAP) begin: gen_trap_pipe
         always @(posedge clk) begin
-            if (ex_pipe_ready & id_req) begin
+            if (ex_pipe_ready && id_req) begin
                 ex_pipe_mret <= dec_mret;
                 // Some note about ex_pipe_exc_pending
                 // 1. Flush from downstream stage will flush both exception and interrupt.
@@ -219,6 +230,26 @@ module ID #(
         assign ex_pipe_exc_pending = 1'b0;
         assign ex_pipe_exc_code = 4'b0;
         assign ex_pipe_exc_interrupt = 1'b0;
+    end
+    endgenerate
+
+    // RV32M Extension
+    generate
+    if (SUPPORT_ZICSR) begin: gen_rv32m_pipe
+        always @(posedge clk) begin
+            if (ex_pipe_ready & id_req) begin
+                ex_pipe_mul <= dec_mul;
+                ex_pipe_mul_opcode <= dec_mul_opcode;
+                ex_pipe_div <= dec_div;
+                ex_pipe_div_opcode <= dec_div_opcode;
+            end
+        end
+    end
+    else begin: no_rv32m_pipe
+        assign ex_pipe_mul = 1'b0;
+        assign ex_pipe_mul_opcode = 2'b0;
+        assign ex_pipe_div = 1'b0;
+        assign ex_pipe_div_opcode = 2'b0;
     end
     endgenerate
 
@@ -249,17 +280,22 @@ module ID #(
     // Stall Logic
     // --------------------------------------
 
-    // We need to stall if there is data dependencies on load instructions
-    // We need to wait until the read data is available in MEM stage
+    // Data dependencies on Load isntruction
     // We need to stall if:
     //     1). ID stage depeneds on the Load instruction in EX stage
     //     2). ID stage depeneds on the Load instruction in MEM stage and the read data is not available yet
     assign id_depends_on_load = ex_pipe_mem_read & ex_pipe_valid & (rs1_match_ex | rs2_match_ex) |
                                 mem_mem_read_wait & (rs1_match_mem | rs2_match_mem);
 
-    // W need to stall if there is a data depencencies on csr instructions
+    // Data depencencies on csr instructions
+    // CSR read result is only available on WB stage
     assign id_depends_on_csr = ex_pipe_csr_read & ex_pipe_valid & (rs1_match_ex | rs2_match_ex) |
                                mem_csr_read & (rs1_match_mem | rs2_match_mem);
+
+    // Data dependencies on MUL instructions
+    // Mul result is only available on WB stage
+    assign id_depends_on_mul = ex_pipe_mul & ex_pipe_valid & (rs1_match_ex | rs2_match_ex) |
+                               mem_mul & (rs1_match_mem | rs2_match_mem);
 
     // --------------------------------------
     // Exception
@@ -286,6 +322,7 @@ module ID #(
         .*);
 
     decoder #(
+        .SUPPORT_RV32M(SUPPORT_RV32M),
         .SUPPORT_ZICSR(SUPPORT_ZICSR)
     ) u_decoder(
         .instruction(id_pipe_instruction),

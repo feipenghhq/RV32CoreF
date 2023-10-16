@@ -14,6 +14,7 @@
 `include "config.svh"
 
 module MEM #(
+    parameter SUPPORT_RV32M = 1,
     parameter SUPPORT_ZICSR = 1,
     parameter SUPPORT_TRAP = 1
 ) (
@@ -39,6 +40,8 @@ module MEM #(
     input  logic [`XLEN-1:0]            mem_pipe_csr_info,
     input  logic [11:0]                 mem_pipe_csr_addr,
     input  logic                        mem_pipe_mret,
+    input  logic                        mem_pipe_mul,
+    input  logic                        mem_pipe_div,
     input  logic                        mem_pipe_exc_pending,
     input  logic [3:0]                  mem_pipe_exc_code,
     input  logic [`XLEN-1:0]            mem_pipe_exc_tval,
@@ -59,6 +62,8 @@ module MEM #(
     output logic [`XLEN-1:0]            wb_pipe_csr_info,
     output logic [11:0]                 wb_pipe_csr_addr,
     output logic                        wb_pipe_mret,
+    output logic                        wb_pipe_mul,
+    output logic                        wb_pipe_div,
     output logic                        wb_pipe_exc_pending,
     output logic [3:0]                  wb_pipe_exc_code,
     output logic [`XLEN-1:0]            wb_pipe_exc_tval,
@@ -69,6 +74,7 @@ module MEM #(
     output logic [`XLEN-1:0]            mem_rd_wdata,
     output logic                        mem_mem_read_wait,
     output logic                        mem_csr_read,
+    output logic                        mem_mul,
     // Data RAM Access
     input  logic                        dram_rvalid,
     input  logic [`XLEN-1:0]            dram_rdata
@@ -133,7 +139,7 @@ module MEM #(
     generate
     if (SUPPORT_ZICSR) begin: gen_csr_pipe
         always @(posedge clk) begin
-            if (wb_pipe_ready & mem_req) begin
+            if (wb_pipe_ready && mem_req) begin
                 wb_pipe_csr_write <= mem_pipe_csr_write;
                 wb_pipe_csr_set   <= mem_pipe_csr_set;
                 wb_pipe_csr_clear <= mem_pipe_csr_clear;
@@ -157,7 +163,7 @@ module MEM #(
     generate
     if (SUPPORT_TRAP) begin: gen_trap_pipe
         always @(posedge clk) begin
-            if (wb_pipe_ready & mem_req) begin
+            if (wb_pipe_ready && mem_req) begin
                 wb_pipe_mret <= mem_pipe_mret;
                 wb_pipe_exc_pending <= mem_pipe_exc_pending;
                 wb_pipe_exc_code <= mem_pipe_exc_code;
@@ -170,6 +176,22 @@ module MEM #(
         assign wb_pipe_exc_pending = 1'b0;
         assign wb_pipe_exc_code = 4'b0;
         assign wb_pipe_exc_interrupt = 1'b0;
+    end
+    endgenerate
+
+    // RV32M Extension
+    generate
+    if (SUPPORT_RV32M) begin: gen_rv32m_pipe
+        always @(posedge clk) begin
+            if (wb_pipe_ready && mem_req) begin
+                wb_pipe_mul <= mem_pipe_mul;
+                wb_pipe_div <= mem_pipe_div;
+            end
+        end
+    end
+    else begin: no_rv32m_pipe
+        assign wb_pipe_mul = 1'b0;
+        assign wb_pipe_div = 1'b0;
     end
     endgenerate
 
@@ -217,6 +239,8 @@ module MEM #(
     assign mem_rd_addr  = mem_pipe_rd_addr;
     assign mem_rd_wdata = rd_data;
     assign mem_csr_read = mem_pipe_csr_read & mem_pipe_valid;
+    assign mem_mul      = mem_pipe_mul & mem_pipe_valid;
     assign mem_mem_read_wait = mem_pipe_mem_read & ~dram_rvalid;
+
 
 endmodule

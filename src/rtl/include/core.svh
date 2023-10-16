@@ -13,9 +13,6 @@
 `ifndef __RV32COREF_CORE__
 `define __RV32COREF_CORE__
 
-
-
-
 // ALU Opcode
 `define ALU_OP_ADD      0
 `define ALU_OP_SUB      1
@@ -45,5 +42,9 @@
 `define ALU_SRC1_PC     0
 `define ALU_SRC1_ZERO   1
 `define ALU_SRC1_WIDTH  2
+
+// Multiple/Divide
+`define MUL_OP_WIDTH    2
+`define DIV_OP_WIDTH    2
 
 `endif
