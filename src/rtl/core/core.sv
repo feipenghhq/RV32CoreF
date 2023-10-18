@@ -112,7 +112,6 @@ module core #(
     logic [11:0]                    mem_pipe_csr_addr;
     logic                           mem_pipe_mret;
     logic                           mem_pipe_mul;
-    logic                           mem_pipe_div;
     logic                           mem_pipe_exc_pending;
     logic [3:0]                     mem_pipe_exc_code;
     logic [`XLEN-1:0]               mem_pipe_exc_tval;
@@ -135,7 +134,6 @@ module core #(
     logic [11:0]                    wb_pipe_csr_addr;
     logic                           wb_pipe_mret;
     logic                           wb_pipe_mul;
-    logic                           wb_pipe_div;
     logic                           wb_pipe_exc_pending;
     logic [3:0]                     wb_pipe_exc_code;
     logic [`XLEN-1:0]               wb_pipe_exc_tval;

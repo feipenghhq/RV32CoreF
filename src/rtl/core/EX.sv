@@ -76,7 +76,6 @@ module EX #(
     output logic [11:0]                 mem_pipe_csr_addr,
     output logic                        mem_pipe_mret,
     output logic                        mem_pipe_mul,
-    output logic                        mem_pipe_div,
     output logic                        mem_pipe_exc_pending,
     output logic [3:0]                  mem_pipe_exc_code,
     output logic [`XLEN-1:0]            mem_pipe_exc_tval,
@@ -113,13 +112,14 @@ module EX #(
     logic [`XLEN-1:0] alu_src2;
 
     // Memory Control
-    logic       dram_done;
-    logic [3:0] wstrb_byte;
-    logic [3:0] wstrb_half;
-    logic [3:0] wstrb_word;
-    logic       mem_addr_misaligned;
-    logic       exc_load_addr_misaligned;
-    logic       exc_store_addr_misaligned;
+    logic               dram_done;
+    logic               dram_wait;
+    logic [3:0]         wstrb_byte;
+    logic [3:0]         wstrb_half;
+    logic [3:0]         wstrb_word;
+    logic               mem_addr_misaligned;
+    logic               exc_load_addr_misaligned;
+    logic               exc_store_addr_misaligned;
 
     // Branch Control
     logic               branch_result_eq;
@@ -135,6 +135,13 @@ module EX #(
     logic               alu_src1_sel_zero;
     logic               alu_src1_sel_rs1;
 
+    // From divider
+    logic               div_req;
+    logic               div_valid;
+    logic               div_ready;
+    logic               div_wait;
+    logic [`XLEN-1:0]   divider_result;
+
     // MISC
     logic [`XLEN-1:0]   pc_plus4;
     logic [`XLEN-1:0]   final_alu_result;
@@ -149,7 +156,7 @@ module EX #(
 
     // Pipeline Control
     assign ex_valid = ex_pipe_valid & ~mem_pipe_flush;
-    assign ex_done = ~dram_req | dram_done;
+    assign ex_done = ~(dram_wait | div_wait);
     assign ex_req = ex_done & ex_valid;
 
     assign ex_pipe_ready = ~ex_valid | ex_req & mem_pipe_ready;
@@ -228,13 +235,11 @@ module EX #(
         always @(posedge clk) begin
             if (mem_pipe_ready && ex_req) begin
                 mem_pipe_mul <= ex_pipe_mul;
-                mem_pipe_div <= ex_pipe_div;
             end
         end
     end
     else begin: no_rv32m_pipe
         assign mem_pipe_mul = 1'b0;
-        assign mem_pipe_div = 1'b0;
     end
     endgenerate
 
@@ -299,6 +304,7 @@ module EX #(
     assign dram_wstrb = wstrb_byte | wstrb_half | wstrb_word;
 
     assign dram_done = ex_pipe_valid & dram_req & dram_ready;
+    assign dram_wait = dram_req & ~dram_done;
 
     assign mem_addr_misaligned = (ex_pipe_mem_opcode[`MEM_OP_HALF] & dram_addr[0]) |
                                  (ex_pipe_mem_opcode[`MEM_OP_WORD] & (|dram_addr[1:0]));
@@ -318,34 +324,14 @@ module EX #(
     assign alu_src2 = ex_pipe_alu_src2_sel_imm ? ex_pipe_immediate : ex_pipe_rs2_rdata;
 
     // --------------------------------------
-    // Multiplier
-    // --------------------------------------
-    // Multiplier logic actually cross 3 stages: EX/MEM/WB
-    // We instantiate the multiplier in EX stage and the output is send to WB stage directly
-    generate
-    if (SUPPORT_RV32M) begin: gen_multiplier
-        multiplier u_multiplier(
-            .clk        (clk),
-            .rst_b      (rst_b),
-            .mul        (ex_pipe_mul),
-            .mul_opcode (ex_pipe_mul_opcode),
-            .mul_src1   (alu_src1),
-            .mul_src2   (alu_src2),
-            .mul_result (wb_mul_result)
-        );
-    end
-    else begin: no_multiplier
-
-    end
-    endgenerate
-
-    // --------------------------------------
     // Final EX stage result
     // --------------------------------------
 
     // for JAL/JALR, pc + 4 is written into rd so we need to select between ALU output and pc + 4
     assign pc_plus4 = ex_pipe_pc + 4;
-    assign final_alu_result = ex_pipe_jump ? pc_plus4 : alu_result;
+    assign final_alu_result = ex_pipe_jump ? pc_plus4 :
+                              ex_pipe_div  ? divider_result :
+                                             alu_result;
 
     // --------------------------------------
     // Forward logic to ID stage
@@ -377,5 +363,57 @@ module EX #(
     alu u_alu (
         .alu_opcode(ex_pipe_alu_opcode),
         .*);
+
+    // --------------------------------------
+    // Multiplier
+    // --------------------------------------
+    // Multiplier logic actually cross 3 stages: EX/MEM/WB
+    // We instantiate the multiplier in EX stage and the output is send to WB stage directly
+    generate
+    if (SUPPORT_RV32M) begin: gen_multiplier
+        multiplier u_multiplier(
+            .clk        (clk),
+            .rst_b      (rst_b),
+            .mul        (ex_pipe_mul),
+            .mul_opcode (ex_pipe_mul_opcode),
+            .mul_src1   (alu_src1),
+            .mul_src2   (alu_src2),
+            .mul_result (wb_mul_result)
+        );
+    end
+    else begin: no_multiplier
+        assign wb_mul_result = `XLEN'b0;
+    end
+    endgenerate
+
+    // --------------------------------------
+    // Divider
+    // --------------------------------------
+    generate
+    if (SUPPORT_RV32M) begin: gen_divider
+    divider u_divider (
+        .clk        (clk),
+        .rst_b      (rst_b),
+        .div_req    (div_req),
+        .div_opcode (ex_pipe_div_opcode),
+        .div_src1   (alu_src1),
+        .div_src2   (alu_src2),
+        .div_result (divider_result),
+        .div_valid  (div_valid),
+        .div_ready  (div_ready)
+    );
+
+    assign div_req = ex_pipe_div & ex_valid;
+    assign div_wait = div_req & ~div_valid;
+
+    end
+    else begin: no_divider
+        assign divider_result = `XLEN'b0;
+        assign div_valid = 1'b0;
+        assign div_ready = 1'b0;
+        assign div_req   = 1'b0;
+        assign div_wait  = 1'b0;
+    end
+    endgenerate
 
 endmodule

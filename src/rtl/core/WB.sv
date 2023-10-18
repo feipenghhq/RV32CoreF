@@ -36,7 +36,6 @@ module WB #(
     input  logic [11:0]                 wb_pipe_csr_addr,
     input  logic                        wb_pipe_mret,
     input  logic                        wb_pipe_mul,
-    input  logic                        wb_pipe_div,
     input  logic                        wb_pipe_exc_pending,
     input  logic [3:0]                  wb_pipe_exc_code,
     input  logic [`XLEN-1:0]            wb_pipe_exc_tval,
@@ -106,7 +105,7 @@ module WB #(
     // --------------------------------------
     // register write logic
     // --------------------------------------
-    assign rd_sel_alu = ~(wb_pipe_csr_read | wb_pipe_mul | wb_pipe_div);
+    assign rd_sel_alu = ~(wb_pipe_csr_read | wb_pipe_mul);
 
     assign wb_rd_write = wb_pipe_rd_write & wb_pipe_valid;
     assign wb_rd_addr  = wb_pipe_rd_addr;

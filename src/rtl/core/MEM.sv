@@ -41,7 +41,6 @@ module MEM #(
     input  logic [11:0]                 mem_pipe_csr_addr,
     input  logic                        mem_pipe_mret,
     input  logic                        mem_pipe_mul,
-    input  logic                        mem_pipe_div,
     input  logic                        mem_pipe_exc_pending,
     input  logic [3:0]                  mem_pipe_exc_code,
     input  logic [`XLEN-1:0]            mem_pipe_exc_tval,
@@ -63,7 +62,6 @@ module MEM #(
     output logic [11:0]                 wb_pipe_csr_addr,
     output logic                        wb_pipe_mret,
     output logic                        wb_pipe_mul,
-    output logic                        wb_pipe_div,
     output logic                        wb_pipe_exc_pending,
     output logic [3:0]                  wb_pipe_exc_code,
     output logic [`XLEN-1:0]            wb_pipe_exc_tval,
@@ -91,6 +89,7 @@ module MEM #(
 
     // Memory Read Control
     logic               load_done;
+    logic               load_wait;
     logic [`XLEN-1:0]   load_data;
     logic [7:0]         lb_data;
     logic [15:0]        lh_data;
@@ -113,7 +112,7 @@ module MEM #(
     // --------------------------------------
 
     assign mem_valid = mem_pipe_valid & ~wb_pipe_flush;
-    assign mem_done = ~mem_pipe_mem_read | load_done;
+    assign mem_done = ~load_wait;
     assign mem_req = mem_done & mem_valid;
 
     assign mem_pipe_ready = ~mem_valid | mem_req & wb_pipe_ready;
@@ -185,13 +184,11 @@ module MEM #(
         always @(posedge clk) begin
             if (wb_pipe_ready && mem_req) begin
                 wb_pipe_mul <= mem_pipe_mul;
-                wb_pipe_div <= mem_pipe_div;
             end
         end
     end
     else begin: no_rv32m_pipe
         assign wb_pipe_mul = 1'b0;
-        assign wb_pipe_div = 1'b0;
     end
     endgenerate
 
@@ -224,6 +221,7 @@ module MEM #(
                        ({`XLEN{is_lw}}  & dram_rdata) ;
 
     assign load_done = mem_valid & mem_pipe_mem_read & dram_rvalid;
+    assign load_wait = mem_pipe_mem_read & ~load_done;
 
     // --------------------------------------
     // Registr write back data selection
